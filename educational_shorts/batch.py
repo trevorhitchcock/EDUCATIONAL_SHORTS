@@ -34,10 +34,14 @@ from educational_shorts.editor import (
 )
 from educational_shorts.fact_checker import (
     build_checked_script_filename,
+    build_fact_check_report,
     build_report_filename,
-    fact_check_script,
+    extract_claims,
+    retrieve_evidence,
+    rewrite_corrected_script,
     save_report,
     save_script as save_checked_script,
+    verify_claims,
 )
 from educational_shorts.metadata import (
     build_metadata_filename,
@@ -570,16 +574,52 @@ def _run_one_topic(
         stages_completed.append(stage)
 
         stage = "fact_checking"
-        report = fact_check_script(
+        
+        claims = extract_claims(
             script=edited_script,
+            system_prompt=prompts["fact_checker"],
+            max_claims=6,
+            temperature=config.fact_check_temperature,
+            seed=config.fact_check_seed + seed_offset,
+        )
+
+        evidence_bundles = retrieve_evidence(
+            claims=claims,
+            cache_directory=(
+                directories["data"] / "retrieval_cache"
+            ),
+            max_search_results=8,
+            max_sources_per_claim=3,
+            max_excerpt_chars=1000,
+            cache_ttl_days=30,
+            force_refresh=False,
+        )
+
+        verifications = verify_claims(
+            evidence_bundles=evidence_bundles,
+            system_prompt=prompts["fact_checker"],
+            temperature=0.0,
+            seed=config.fact_check_seed + seed_offset,
+        )
+
+        corrected_script = rewrite_corrected_script(
+            script=edited_script,
+            evidence_bundles=evidence_bundles,
+            verifications=verifications,
             system_prompt=prompts["fact_checker"],
             target_wpm=config.target_words_per_minute,
             minimum_words=config.fact_check_minimum_words,
             maximum_words=config.fact_check_maximum_words,
-            temperature=config.fact_check_temperature,
+            temperature=0.2,
             seed=config.fact_check_seed + seed_offset,
         )
-        corrected_script = report.corrected_script
+
+        report = build_fact_check_report(
+            claims=claims,
+            evidence_bundles=evidence_bundles,
+            verifications=verifications,
+            corrected_script=corrected_script,
+        )
 
         checked_script_path = (
             directories["checked_scripts"]

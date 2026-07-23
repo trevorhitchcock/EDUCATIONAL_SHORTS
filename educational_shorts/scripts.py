@@ -70,7 +70,7 @@ Requirements:
 - Aim for roughly {approximate_word_target} total words so the narration fits
   approximately {outline.estimated_total_seconds} seconds.
 - Keep the hook brief and end with one clear takeaway.
-- Put visual guidance in visual_direction, not inside narration.
+- Do not include visual directions or stage directions inside narration.
 - Return only valid structured output matching the requested schema.
 """.strip()
 
@@ -131,14 +131,6 @@ def generate_script(
         )
 
     script.topic = outline.topic
-
-    for script_section, outline_section in zip(
-        script.sections,
-        outline.sections,
-        strict=True,
-    ):
-        if not script_section.visual_direction.strip():
-            script_section.visual_direction = outline_section.visual_direction
 
     _normalize_segment_timing(script.hook, target_wpm)
     for section in script.sections:
