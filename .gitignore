@@ -1,0 +1,87 @@
+@'
+# Python
+__pycache__/
+*.py[cod]
+*.pyd
+*.so
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Environment variables and secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+credentials*.json
+secrets*.json
+config.local.*
+
+# Jupyter
+.ipynb_checkpoints/
+
+# IDEs
+.vscode/
+.idea/
+
+# Operating system files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Generated project data
+data/
+outputs/
+generated/
+
+# Audio and video
+*.mp3
+*.wav
+*.m4a
+*.mp4
+*.mov
+*.avi
+*.srt
+*.vtt
+
+# Local models and caches
+models/
+.cache/
+ollama/
+retrieval_cache/
+
+# Logs and temporary files
+*.log
+*.tmp
+*.temp
+'@ | Set-Content .gitignore
+
+# Generated media
+data/audio/
+data/videos/
+data/captions/
+
+# Gameplay footage
+data/gameplay/
+
+# Batch outputs
+data/batch_runs/
+
+# Optional generated metadata/scripts if you don't want them
+data/topics/
+data/outlines/
+data/scripts/
+data/edited_scripts/
+data/checked_scripts/
+data/fact_checks/
+data/metadata/
+
+# Jupyter checkpoints
+.ipynb_checkpoints/
+
+# Python cache
+__pycache__/
+*.pyc

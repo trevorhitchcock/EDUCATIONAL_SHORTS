@@ -1,0 +1,94 @@
+{
+  "topics": [
+    {
+      "title": "How Do Bacteria Communicate?",
+      "category_path": [
+        "Science",
+        "Biology",
+        "Microbiology"
+      ],
+      "learning_objective": "Understand how bacteria use chemical signals to communicate and coordinate behavior."
+    },
+    {
+      "title": "What Is a Biofilm, and Why Does It Matter?",
+      "category_path": [
+        "Science",
+        "Biology",
+        "Microbiology"
+      ],
+      "learning_objective": "Learn what biofilms are and their significance in health, industry, and the environment."
+    },
+    {
+      "title": "How Do Antimicrobial Resistance Genes Spread?",
+      "category_path": [
+        "Science",
+        "Biology",
+        "Microbiology"
+      ],
+      "learning_objective": "Explore how bacteria share genes that make them resistant to antibiotics through horizontal gene transfer."
+    },
+    {
+      "title": "What Are the Differences Between Viruses and Bacteria?",
+      "category_path": [
+        "Science",
+        "Biology",
+        "Microbiology"
+      ],
+      "learning_objective": "Compare and contrast viruses and bacteria in terms of structure, reproduction, and impact on health."
+    },
+    {
+      "title": "How Do Microbes Help Break Down Plastic?",
+      "category_path": [
+        "Science",
+        "Biology",
+        "Microbiology"
+      ],
+      "learning_objective": "Discover how certain microbes can degrade plastic waste through specialized enzymes."
+    },
+    {
+      "title": "What Is the Role of Endospores in Bacterial Survival?",
+      "category_path": [
+        "Science",
+        "Biology",
+        "Microbiology"
+      ],
+      "learning_objective": "Understand how endospores allow bacteria to survive extreme environmental conditions."
+    },
+    {
+      "title": "How Do Microbes Influence Human Digestion?",
+      "category_path": [
+        "Science",
+        "Biology",
+        "Microbiology"
+      ],
+      "learning_objective": "Explore the role of gut microbiota in digestion, immunity, and overall health."
+    },
+    {
+      "title": "What Are Probiotics, and How Do They Work?",
+      "category_path": [
+        "Science",
+        "Biology",
+        "Microbiology"
+      ],
+      "learning_objective": "Learn how probiotics support digestive health by balancing gut bacteria."
+    },
+    {
+      "title": "How Do Microbes Contribute to Climate Change?",
+      "category_path": [
+        "Science",
+        "Biology",
+        "Microbiology"
+      ],
+      "learning_objective": "Discover the role of microbes in carbon cycling and their impact on greenhouse gas emissions."
+    },
+    {
+      "title": "What Is a Lysogenic Cycle, and How Does It Work?",
+      "category_path": [
+        "Science",
+        "Biology",
+        "Microbiology"
+      ],
+      "learning_objective": "Understand how bacteriophages integrate into bacterial DNA during the lysogenic cycle."
+    }
+  ]
+}

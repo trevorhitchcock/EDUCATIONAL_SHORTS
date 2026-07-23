@@ -1,0 +1,46 @@
+{
+  "topic": {
+    "title": "How Do Bacteria Communicate?",
+    "category_path": [
+      "Science",
+      "Biology",
+      "Microbiology"
+    ],
+    "learning_objective": "Understand how bacteria use chemical signals to communicate and coordinate behavior."
+  },
+  "hook": {
+    "segment_type": "Hook",
+    "narration": "Bacteria don’t just live alone—they talk.",
+    "estimated_seconds": 3
+  },
+  "sections": [
+    {
+      "segment_type": "What Is Quorum Sensing?",
+      "narration": "They use chemical signals called quorum sensing to know when they’re in a crowd. These molecules act as messages between bacteria.",
+      "estimated_seconds": 9
+    },
+    {
+      "segment_type": "How Do They Communicate?",
+      "narration": "Bacteria release these chemicals into their environment. When enough are present, it signals that the group is large and active.",
+      "estimated_seconds": 8
+    },
+    {
+      "segment_type": "What Happens Next?",
+      "narration": "They use this signal to form protective biofilms or switch from harmless to harmful states. It’s a way to work together as a team.",
+      "estimated_seconds": 10
+    },
+    {
+      "segment_type": "Why Does This Matter?",
+      "narration": "This communication shapes their behavior and survival. Scientists study it to develop new ways to fight infections and improve health.",
+      "estimated_seconds": 8
+    }
+  ],
+  "closing": {
+    "segment_type": "Closing Takeaway",
+    "narration": "Bacteria use chemical signals to talk, cooperate, and survive—key insights that drive breakthroughs in science and medicine.",
+    "estimated_seconds": 7
+  },
+  "full_narration": "Bacteria don’t just live alone—they talk.\n\nThey use chemical signals called quorum sensing to know when they’re in a crowd. These molecules act as messages between bacteria.\n\nBacteria release these chemicals into their environment. When enough are present, it signals that the group is large and active.\n\nThey use this signal to form protective biofilms or switch from harmless to harmful states. It’s a way to work together as a team.\n\nThis communication shapes their behavior and survival. Scientists study it to develop new ways to fight infections and improve health.\n\nBacteria use chemical signals to talk, cooperate, and survive—key insights that drive breakthroughs in science and medicine.",
+  "word_count": 110,
+  "estimated_total_seconds": 45
+}

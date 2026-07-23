@@ -1,0 +1,4 @@
+# NOTEBOOK_09_TTS_GENERATION_KOKORO_V1
+kokoro>=0.9.4
+soundfile>=0.12.1
+numpy>=1.26

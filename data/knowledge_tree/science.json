@@ -1,0 +1,136 @@
+{
+  "name": "Science",
+  "children": [
+    {
+      "name": "Biology",
+      "children": [
+        {
+          "name": "Cell Biology",
+          "children": [
+            {
+              "name": "Cell Structure",
+              "children": []
+            },
+            {
+              "name": "Cell Membrane",
+              "children": []
+            },
+            {
+              "name": "Cytoplasmic Organelles",
+              "children": []
+            },
+            {
+              "name": "Nucleus and DNA",
+              "children": []
+            },
+            {
+              "name": "Cell Division",
+              "children": []
+            },
+            {
+              "name": "Genetic Information Flow",
+              "children": []
+            },
+            {
+              "name": "Cell Signaling",
+              "children": []
+            },
+            {
+              "name": "Cell Cycle Regulation",
+              "children": []
+            }
+          ]
+        },
+        {
+          "name": "Genetics",
+          "children": [
+            {
+              "name": "DNA Structure",
+              "children": []
+            },
+            {
+              "name": "Gene Expression",
+              "children": []
+            },
+            {
+              "name": "Inheritance Patterns",
+              "children": []
+            },
+            {
+              "name": "Mutations and Variants",
+              "children": []
+            },
+            {
+              "name": "Population Genetics",
+              "children": []
+            },
+            {
+              "name": "Epigenetics",
+              "children": []
+            },
+            {
+              "name": "Genetic Disorders",
+              "children": []
+            },
+            {
+              "name": "Genomic Technologies",
+              "children": []
+            }
+          ]
+        },
+        {
+          "name": "Evolutionary Biology",
+          "children": []
+        },
+        {
+          "name": "Ecology",
+          "children": []
+        },
+        {
+          "name": "Microbiology",
+          "children": []
+        },
+        {
+          "name": "Anatomy",
+          "children": []
+        },
+        {
+          "name": "Physiology",
+          "children": []
+        },
+        {
+          "name": "Biochemistry",
+          "children": []
+        }
+      ]
+    },
+    {
+      "name": "Chemistry",
+      "children": []
+    },
+    {
+      "name": "Physics",
+      "children": []
+    },
+    {
+      "name": "Earth Science",
+      "children": []
+    },
+    {
+      "name": "Space Science",
+      "children": []
+    },
+    {
+      "name": "Environmental Science",
+      "children": []
+    },
+    {
+      "name": "Technology",
+      "children": []
+    },
+    {
+      "name": "Engineering",
+      "children": []
+    }
+  ]
+}

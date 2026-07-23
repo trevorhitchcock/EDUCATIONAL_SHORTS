@@ -1,0 +1,46 @@
+{
+  "topic": {
+    "title": "How Do Bacteria Communicate?",
+    "category_path": [
+      "Science",
+      "Biology",
+      "Microbiology"
+    ],
+    "learning_objective": "Understand how bacteria use chemical signals to communicate and coordinate behavior."
+  },
+  "hook": {
+    "segment_type": "Hook",
+    "narration": "Bacteria don’t just live alone—they talk.",
+    "estimated_seconds": 3
+  },
+  "sections": [
+    {
+      "segment_type": "What Is Quorum Sensing?",
+      "narration": "They use chemical signals to detect when they’re in a crowd. These molecules help bacteria sense their environment and coordinate behavior.",
+      "estimated_seconds": 9
+    },
+    {
+      "segment_type": "How Do They Communicate?",
+      "narration": "Bacteria release these chemicals into their surroundings. When concentrations reach certain levels, it signals that the population is large and active.",
+      "estimated_seconds": 9
+    },
+    {
+      "segment_type": "What Happens Next?",
+      "narration": "They use this signal to form protective biofilms or change how they behave. This helps them work together as a group in certain conditions.",
+      "estimated_seconds": 10
+    },
+    {
+      "segment_type": "Why Does This Matter?",
+      "narration": "This communication influences their behavior and survival. Scientists study it to better understand bacterial processes, which can lead to new approaches for managing infections.",
+      "estimated_seconds": 10
+    }
+  ],
+  "closing": {
+    "segment_type": "Closing Takeaway",
+    "narration": "Bacteria use chemical signals to communicate and coordinate—key insights that help scientists explore ways to manage bacterial behavior in health and disease.",
+    "estimated_seconds": 10
+  },
+  "full_narration": "Bacteria don’t just live alone—they talk.\n\nThey use chemical signals to detect when they’re in a crowd. These molecules help bacteria sense their environment and coordinate behavior.\n\nBacteria release these chemicals into their surroundings. When concentrations reach certain levels, it signals that the population is large and active.\n\nThey use this signal to form protective biofilms or change how they behave. This helps them work together as a group in certain conditions.\n\nThis communication influences their behavior and survival. Scientists study it to better understand bacterial processes, which can lead to new approaches for managing infections.\n\nBacteria use chemical signals to communicate and coordinate—key insights that help scientists explore ways to manage bacterial behavior in health and disease.",
+  "word_count": 120,
+  "estimated_total_seconds": 51
+}
