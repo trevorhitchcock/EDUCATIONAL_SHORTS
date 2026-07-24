@@ -85,7 +85,8 @@ data/metadata/
 # Python cache
 __pycache__/
 *.pyc
-
 educational_shorts/__pycache__/
-__pycache__/
-*.pyc
+
+data/topic_library.db
+data/topic_library.db-shm
+data/topic_library.db-wal

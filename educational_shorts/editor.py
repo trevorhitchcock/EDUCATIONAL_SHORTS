@@ -118,7 +118,7 @@ def build_editor_prompt(
             "maximum_seconds must be greater than or equal to minimum_seconds."
         )
 
-    minimum_words = 105
+    minimum_words = 90
     maximum_words = round(maximum_seconds * target_wpm / 60)
 
     script_json = json.dumps(
@@ -167,7 +167,7 @@ def edit_script(
     maximum_seconds: int = 60,
     temperature: float = 0.4,
     seed: int | None = None,
-    minimum_words: int = 105,
+    minimum_words: int = 90,
     max_attempts: int = 3,
 ) -> VideoScript:
     """Edit a script and retry when the result is too short."""
