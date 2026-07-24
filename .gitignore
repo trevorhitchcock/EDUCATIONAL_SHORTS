@@ -1,4 +1,3 @@
-@'
 # Python
 __pycache__/
 *.py[cod]
@@ -23,11 +22,9 @@ config.local.*
 # Jupyter
 .ipynb_checkpoints/
 
-# IDEs
+# IDE and operating-system files
 .vscode/
 .idea/
-
-# Operating system files
 .DS_Store
 Thumbs.db
 desktop.ini
@@ -37,7 +34,7 @@ data/
 outputs/
 generated/
 
-# Audio and video
+# Generated media
 *.mp3
 *.wav
 *.m4a
@@ -57,36 +54,3 @@ retrieval_cache/
 *.log
 *.tmp
 *.temp
-'@ | Set-Content .gitignore
-
-# Generated media
-data/audio/
-data/videos/
-data/captions/
-
-# Gameplay footage
-data/gameplay/
-
-# Batch outputs
-data/batch_runs/
-
-# Optional generated metadata/scripts if you don't want them
-data/topics/
-data/outlines/
-data/scripts/
-data/edited_scripts/
-data/checked_scripts/
-data/fact_checks/
-data/metadata/
-
-# Jupyter checkpoints
-.ipynb_checkpoints/
-
-# Python cache
-__pycache__/
-*.pyc
-educational_shorts/__pycache__/
-
-data/topic_library.db
-data/topic_library.db-shm
-data/topic_library.db-wal
