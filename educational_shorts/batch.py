@@ -1,47 +1,51 @@
-"""NOTEBOOK_12_BATCH_PIPELINE_FRESH_V1
+"""End-to-end batch pipeline for Educational Shorts.
 
-End-to-end orchestration for the Educational Shorts project.
+This module keeps the existing project files intact while removing the largest
+sources of wasted time in Notebook 12:
 
-This module intentionally leaves the knowledge-tree expansion in Notebook 02.
-It starts from an existing knowledge tree, prepares topic candidates, and then
-runs selected topics through:
+- reuse saved outline/script artifacts when retrying a failed topic;
+- skip the separate script-editor LLM call by default;
+- cache extracted claims;
+- retrieve evidence for multiple claims concurrently;
+- verify claims and rewrite the script in one structured Ollama request;
+- accept a structurally valid corrected script even when its word count misses
+  the target, rather than discarding a long run;
+- print start/end timing for every expensive stage.
 
-03 topic generation
-04 outline generation
-05 script generation
-06 script editing
-07 fact checking
-08 metadata generation
-09 Kokoro TTS
-10 caption generation
-11 video assembly
 """
 
 from __future__ import annotations
 
+import hashlib
 import json
+import re
+import time
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from contextlib import contextmanager
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Literal
+from typing import Iterator, Literal
 
 from pydantic import BaseModel, Field
 
 from educational_shorts.captions import generate_caption_assets
+from educational_shorts.client import ask_llm
 from educational_shorts.editor import (
     build_edited_script_filename,
     edit_script,
     save_script as save_edited_script,
 )
 from educational_shorts.fact_checker import (
+    _claim_quote_coverage,
+    _normalize_quote,
     build_checked_script_filename,
     build_fact_check_report,
     build_report_filename,
     extract_claims,
-    retrieve_evidence,
-    rewrite_corrected_script,
+    normalize_script,
+    retrieve_evidence_for_claim,
     save_report,
     save_script as save_checked_script,
-    verify_claims,
 )
 from educational_shorts.metadata import (
     build_metadata_filename,
@@ -55,7 +59,12 @@ from educational_shorts.outlines import (
 )
 from educational_shorts.prompts import load_prompt
 from educational_shorts.schemas import (
+    ClaimEvidenceBundle,
+    ClaimVerification,
+    FactualClaim,
     KnowledgeNode,
+    VideoOutline,
+    VideoScript,
     VideoTopic,
     VideoTopicList,
 )
@@ -63,12 +72,6 @@ from educational_shorts.scripts import (
     build_script_filename,
     generate_script,
     save_script as save_generated_script,
-)
-from educational_shorts.topics import (
-    build_topics_filename,
-    generate_topics,
-    sample_node_path,
-    save_topics,
 )
 from educational_shorts.tts import (
     KokoroSynthesizer,
@@ -82,7 +85,7 @@ from educational_shorts.video import (
 )
 
 
-class BatchConfig(BaseModel):
+class _BaseBatchConfig(BaseModel):
     """Configuration shared across candidate generation and rendering."""
 
     root_category: str = "Science"
@@ -252,19 +255,35 @@ class BatchRunManifest(BaseModel):
     items: list[PipelineItemResult] = Field(default_factory=list)
 
 
-def _utc_now() -> str:
-    return datetime.now(timezone.utc).isoformat()
+class BatchConfig(_BaseBatchConfig):
+    """Batch settings focused on reducing local-model runtime."""
 
+    # One fewer full Ollama writing pass on fresh topics.
+    skip_script_editor: bool = True
 
-def _run_id() -> str:
-    return datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S%fZ")
+    # Reuse files saved before a previous failure.
+    reuse_existing_intermediates: bool = True
 
+    # Fact-check workload.
+    fact_check_max_claims: int = Field(default=4, ge=1, le=10)
+    fact_check_max_search_results: int = Field(default=5, ge=1, le=20)
+    fact_check_max_sources_per_claim: int = Field(default=2, ge=1, le=5)
+    fact_check_max_excerpt_chars: int = Field(
+        default=700,
+        ge=200,
+        le=3000,
+    )
+    fact_check_cache_ttl_days: int = Field(default=90, ge=1)
+    fact_check_retrieval_workers: int = Field(default=4, ge=1, le=8)
 
-def _slugify(value: str) -> str:
-    import re
+    # This is a target, not a reason to throw away a completed run.
+    fact_check_minimum_words: int = Field(default=85, ge=1)
+    fact_check_maximum_words: int = Field(default=150, ge=1)
 
-    slug = re.sub(r"[^a-z0-9]+", "_", value.lower()).strip("_")
-    return slug or "batch"
+    # Claim and combined-decision caches make retries much faster.
+    use_claim_cache: bool = True
+    use_fact_check_decision_cache: bool = True
+    force_refresh_fact_check: bool = False
 
 
 def resolve_project_directories(project_root: Path) -> dict[str, Path]:
@@ -345,56 +364,94 @@ def preflight_batch_pipeline(
     }
 
 
-def prepare_topic_batch(
-    project_root: Path,
-    config: BatchConfig,
-) -> TopicBatchPlan:
-    """Generate and save a candidate topic collection."""
-    tree_path = resolve_tree_path(project_root, config)
-    tree = load_knowledge_tree(tree_path)
+def summarize_batch_manifest(
+    manifest: BatchRunManifest,
+) -> dict[str, object]:
+    counts = {
+        status: sum(
+            item.status == status
+            for item in manifest.items
+        )
+        for status in [
+            "completed",
+            "manual_review",
+            "skipped_existing",
+            "failed",
+        ]
+    }
 
-    if config.category_path_override:
-        category_path = list(config.category_path_override)
+    return {
+        "run_id": manifest.run_id,
+        "status": manifest.status,
+        "selected_topics": len(manifest.selected_topic_indexes),
+        **counts,
+        "output_directory": manifest.output_directory,
+        "manifest": str(
+            Path(manifest.output_directory)
+            / manifest.manifest_filename
+        ),
+    }
+
+
+class CombinedFactCheckResult(BaseModel):
+    """One model response containing verdicts and the final script."""
+
+    verifications: list[ClaimVerification] = Field(default_factory=list)
+    corrected_script: VideoScript
+
+
+def _utc_now() -> str:
+    return datetime.now(timezone.utc).isoformat()
+
+
+def _run_id() -> str:
+    return datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S%fZ")
+
+
+def _slugify(value: str) -> str:
+    slug = re.sub(r"[^a-z0-9]+", "_", value.lower()).strip("_")
+    return slug or "batch"
+
+
+@contextmanager
+def _stage_timer(
+    label: str,
+    timings: dict[str, float],
+) -> Iterator[None]:
+    """Print immediate progress and record elapsed seconds."""
+    print(f"[START] {label}", flush=True)
+    started = time.perf_counter()
+
+    try:
+        yield
+    except Exception:
+        elapsed = time.perf_counter() - started
+        timings[label] = elapsed
+        print(
+            f"[FAILED] {label}: {elapsed / 60:.1f} min",
+            flush=True,
+        )
+        raise
     else:
-        category_path = sample_node_path(
-            tree=tree,
-            min_depth=config.min_category_depth,
-            max_depth=config.max_category_depth,
-            seed=config.category_selection_seed,
+        elapsed = time.perf_counter() - started
+        timings[label] = elapsed
+        print(
+            f"[DONE] {label}: {elapsed / 60:.1f} min",
+            flush=True,
         )
 
-    topic_prompt = load_prompt("topic_generation")
 
-    topics = generate_topics(
-        category_path=category_path,
-        system_prompt=topic_prompt,
-        count=config.topic_candidate_count,
-        temperature=config.topic_generation_temperature,
-        seed=config.topic_generation_seed,
-    )
+def _print_timing_summary(timings: dict[str, float]) -> None:
+    if not timings:
+        return
 
-    run_id = _run_id()
-    directories = resolve_project_directories(project_root)
+    print()
+    print("Stage timing:")
+    for label, seconds in timings.items():
+        print(f"  {label}: {seconds / 60:.1f} min")
 
-    standard_filename = build_topics_filename(category_path)
-    standard_stem = Path(standard_filename).stem
-    topics_path = (
-        directories["topics"]
-        / f"{standard_stem}__{run_id}.json"
-    )
-
-    save_topics(
-        topics=topics,
-        output_path=topics_path,
-    )
-
-    return TopicBatchPlan(
-        run_id=run_id,
-        category_path=category_path,
-        topics_file=str(topics_path),
-        created_at_utc=_utc_now(),
-        topics=topics,
-    )
+    total = sum(timings.values())
+    print(f"  measured total: {total / 60:.1f} min")
 
 
 def _load_pipeline_prompts() -> dict[str, str]:
@@ -446,32 +503,686 @@ def _save_batch_manifest(
 
 
 def _validate_selected_indexes(
-    topics: VideoTopicList,
+    plan: TopicBatchPlan,
     selected_topic_indexes: list[int],
 ) -> list[int]:
     if not selected_topic_indexes:
         raise ValueError(
-            "selected_topic_indexes cannot be empty. Choose at least one "
-            "candidate topic index."
+            "selected_topic_indexes cannot be empty."
         )
 
-    unique_indexes: list[int] = []
+    output: list[int] = []
     seen: set[int] = set()
 
     for index in selected_topic_indexes:
         if index in seen:
             continue
 
-        if index < 0 or index >= len(topics.topics):
+        if index < 0 or index >= len(plan.topics.topics):
             raise IndexError(
                 f"Topic index {index} is outside the valid range "
-                f"0 to {len(topics.topics) - 1}."
+                f"0 to {len(plan.topics.topics) - 1}."
             )
 
+        output.append(index)
         seen.add(index)
-        unique_indexes.append(index)
 
-    return unique_indexes
+    return output
+
+
+def _load_json_model(path: Path, model_type):
+    return model_type.model_validate_json(
+        path.read_text(encoding="utf-8")
+    )
+
+
+def _stable_hash(payload: object) -> str:
+    text = json.dumps(
+        payload,
+        sort_keys=True,
+        ensure_ascii=False,
+        separators=(",", ":"),
+    )
+    return hashlib.sha256(text.encode("utf-8")).hexdigest()
+
+
+def _claim_cache_path(
+    cache_root: Path,
+    script: VideoScript,
+    max_claims: int,
+) -> Path:
+    digest = _stable_hash(
+        {
+            "script": script.model_dump(),
+            "max_claims": max_claims,
+        }
+    )
+    return cache_root / "claims" / f"{digest}.json"
+
+
+def _extract_claims_cached(
+    *,
+    script: VideoScript,
+    system_prompt: str,
+    max_claims: int,
+    temperature: float,
+    seed: int | None,
+    cache_root: Path,
+    use_cache: bool,
+    force_refresh: bool,
+) -> list[FactualClaim]:
+    path = _claim_cache_path(cache_root, script, max_claims)
+
+    if use_cache and not force_refresh and path.exists():
+        try:
+            payload = json.loads(path.read_text(encoding="utf-8"))
+            claims = [
+                FactualClaim.model_validate(item)
+                for item in payload["claims"]
+            ]
+            print(
+                f"[CACHE] Reused {len(claims)} extracted claims.",
+                flush=True,
+            )
+            return claims
+        except (
+            OSError,
+            KeyError,
+            TypeError,
+            ValueError,
+            json.JSONDecodeError,
+        ):
+            pass
+
+    claims = extract_claims(
+        script=script,
+        system_prompt=system_prompt,
+        max_claims=max_claims,
+        temperature=temperature,
+        seed=seed,
+    )
+
+    if use_cache:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(
+            json.dumps(
+                {
+                    "claims": [
+                        claim.model_dump() for claim in claims
+                    ]
+                },
+                indent=2,
+                ensure_ascii=False,
+            ),
+            encoding="utf-8",
+        )
+
+    return claims
+
+
+def _retrieve_evidence_parallel(
+    *,
+    claims: list[FactualClaim],
+    cache_directory: Path,
+    max_search_results: int,
+    max_sources_per_claim: int,
+    max_excerpt_chars: int,
+    cache_ttl_days: int,
+    force_refresh: bool,
+    max_workers: int,
+) -> list[ClaimEvidenceBundle]:
+    """Retrieve separate claims concurrently while preserving order."""
+    if not claims:
+        return []
+
+    workers = min(max_workers, len(claims))
+    output: list[ClaimEvidenceBundle | None] = [None] * len(claims)
+
+    def retrieve(index: int, claim: FactualClaim):
+        bundle = retrieve_evidence_for_claim(
+            claim=claim,
+            cache_directory=cache_directory,
+            max_search_results=max_search_results,
+            max_sources=max_sources_per_claim,
+            max_excerpt_chars=max_excerpt_chars,
+            cache_ttl_days=cache_ttl_days,
+            force_refresh=force_refresh,
+        )
+        return index, bundle
+
+    with ThreadPoolExecutor(max_workers=workers) as executor:
+        futures = [
+            executor.submit(retrieve, index, claim)
+            for index, claim in enumerate(claims)
+        ]
+
+        for future in as_completed(futures):
+            index, bundle = future.result()
+            output[index] = bundle
+            source_label = "cache" if bundle.used_cache else "web"
+            print(
+                f"  Retrieved {index + 1}/{len(claims)}: "
+                f"{len(bundle.sources)} source(s) from {source_label}",
+                flush=True,
+            )
+
+    return [
+        bundle
+        for bundle in output
+        if bundle is not None
+    ]
+
+
+def _insufficient_verification(
+    bundle: ClaimEvidenceBundle,
+    explanation: str,
+) -> ClaimVerification:
+    return ClaimVerification(
+        claim_id=bundle.claim.claim_id,
+        verdict="insufficient_evidence",
+        severity="medium",
+        explanation=explanation,
+        correction=None,
+        supporting_urls=[],
+        evidence_quote=None,
+        evidence_url=None,
+    )
+
+
+def _normalize_verifications(
+    raw_verifications: list[ClaimVerification],
+    evidence_bundles: list[ClaimEvidenceBundle],
+) -> list[ClaimVerification]:
+    """Keep model verdicts tied to the evidence actually supplied."""
+    bundle_by_id = {
+        bundle.claim.claim_id: bundle
+        for bundle in evidence_bundles
+    }
+    output: list[ClaimVerification] = []
+    seen: set[str] = set()
+
+    for verification in raw_verifications:
+        bundle = bundle_by_id.get(verification.claim_id)
+
+        if bundle is None or verification.claim_id in seen:
+            continue
+
+        allowed_urls = {source.url for source in bundle.sources}
+        verification.supporting_urls = [
+            url
+            for url in verification.supporting_urls
+            if url in allowed_urls
+        ]
+
+        if not bundle.sources:
+            verification = _insufficient_verification(
+                bundle,
+                bundle.retrieval_error or "No evidence was available.",
+            )
+
+        elif verification.verdict == "supported":
+            evidence_quote = (
+                verification.evidence_quote or ""
+            ).strip()
+            matching_source = None
+
+            for source in bundle.sources:
+                normalized_quote = _normalize_quote(evidence_quote)
+                normalized_excerpt = _normalize_quote(source.excerpt)
+
+                if (
+                    normalized_quote
+                    and normalized_quote in normalized_excerpt
+                ):
+                    matching_source = source
+                    break
+
+            if matching_source is None:
+                verification = _insufficient_verification(
+                    bundle,
+                    (
+                        "The verifier marked this claim as supported but "
+                        "did not provide a valid quote copied from the "
+                        "supplied evidence."
+                    ),
+                )
+            else:
+                coverage = _claim_quote_coverage(
+                    bundle.claim.atomic_claim,
+                    evidence_quote,
+                )
+
+                if coverage < 0.55:
+                    verification = _insufficient_verification(
+                        bundle,
+                        (
+                            "The evidence quote exists, but it does not "
+                            "cover enough of the claim. Lexical coverage: "
+                            f"{coverage:.0%}."
+                        ),
+                    )
+                else:
+                    verification.severity = "none"
+                    verification.correction = None
+                    verification.evidence_url = matching_source.url
+                    verification.supporting_urls = [
+                        matching_source.url
+                    ]
+
+        output.append(verification)
+        seen.add(verification.claim_id)
+
+    for bundle in evidence_bundles:
+        claim_id = bundle.claim.claim_id
+
+        if claim_id not in seen:
+            output.append(
+                _insufficient_verification(
+                    bundle,
+                    bundle.retrieval_error
+                    or "The verifier omitted this claim.",
+                )
+            )
+
+    order = {
+        bundle.claim.claim_id: index
+        for index, bundle in enumerate(evidence_bundles)
+    }
+    return sorted(output, key=lambda item: order[item.claim_id])
+
+
+def _build_combined_fact_check_prompt(
+    *,
+    script: VideoScript,
+    evidence_bundles: list[ClaimEvidenceBundle],
+    minimum_words: int,
+    maximum_words: int,
+) -> str:
+    payload = [
+        {
+            "claim": bundle.claim.model_dump(),
+            "sources": [
+                source.model_dump() for source in bundle.sources
+            ],
+            "retrieval_error": bundle.retrieval_error,
+        }
+        for bundle in evidence_bundles
+    ]
+
+    return f"""
+Perform the verification and correction in one operation.
+
+SOURCE SCRIPT:
+{json.dumps(script.model_dump(), indent=2, ensure_ascii=False)}
+
+CLAIMS AND EVIDENCE:
+{json.dumps(payload, indent=2, ensure_ascii=False)}
+
+Return:
+1. exactly one ClaimVerification for every supplied claim_id; and
+2. a corrected VideoScript ready for narration.
+
+Verification rules:
+- Use only the evidence supplied for that claim.
+- supported means the evidence directly supports every material part.
+- contradicted means the evidence directly conflicts with the wording.
+- overstated means the basic idea is plausible but too broad or too certain.
+- insufficient_evidence means the passages do not establish a verdict.
+- For supported, copy one exact evidence_quote from the supplied excerpts.
+- evidence_url and supporting_urls may contain only supplied URLs.
+- For contradicted or overstated, provide a concise evidence-based correction.
+- Never fill an evidence gap from memory.
+
+Script rules:
+- Preserve the exact topic object.
+- Preserve the script's spoken order and general structure.
+- Apply the corrections indicated by your own verifications.
+- For insufficient evidence, naturally soften or remove the unsupported part.
+- Do not invent facts, studies, numbers, names, dates, or mechanisms.
+- Do not mention evidence, sources, fact checking, or uncertainty in the
+  research process inside the narration.
+- Do not include citations, URLs, headings, visual directions, hashtags, or
+  engagement requests in narration.
+- Aim for {minimum_words} to {maximum_words} total words.
+- Word count is a target. Accuracy and a complete natural script matter more
+  than adding filler to reach the minimum.
+- Return only structured output matching the requested schema.
+""".strip()
+
+
+def _combined_decision_cache_path(
+    cache_root: Path,
+    script: VideoScript,
+    evidence_bundles: list[ClaimEvidenceBundle],
+    minimum_words: int,
+    maximum_words: int,
+) -> Path:
+    digest = _stable_hash(
+        {
+            "script": script.model_dump(),
+            "evidence": [
+                bundle.model_dump()
+                for bundle in evidence_bundles
+            ],
+            "minimum_words": minimum_words,
+            "maximum_words": maximum_words,
+            "pipeline_version": 1,
+        }
+    )
+    return (
+        cache_root
+        / "combined_fact_checks"
+        / f"{digest}.json"
+    )
+
+def _rewrite_after_verification_downgrade(
+    *,
+    script: VideoScript,
+    verifications: list[ClaimVerification],
+    claims: list[FactualClaim],
+    system_prompt: str,
+    target_wpm: int,
+    minimum_words: int,
+    maximum_words: int,
+    temperature: float,
+    seed: int | None,
+) -> VideoScript:
+    claim_by_id = {
+        claim.claim_id: claim
+        for claim in claims
+    }
+
+    rejected_claims = []
+
+    for verification in verifications:
+        if verification.verdict != "insufficient_evidence":
+            continue
+
+        claim = claim_by_id.get(verification.claim_id)
+
+        if claim is None:
+            continue
+
+        rejected_claims.append(
+            {
+                "claim": claim.model_dump(),
+                "reason": verification.explanation,
+            }
+        )
+
+    prompt = f"""
+A previous fact-checking response produced this narration:
+
+{json.dumps(script.model_dump(), indent=2, ensure_ascii=False)}
+
+Post-validation rejected the following claims because their supplied evidence
+was insufficient:
+
+{json.dumps(rejected_claims, indent=2, ensure_ascii=False)}
+
+Rewrite the narration so those rejected claims are removed or softened.
+
+Requirements:
+- Preserve the exact topic.
+- Preserve the spoken order and number of body sections.
+- Do not introduce replacement facts from memory.
+- Do not mention fact checking, evidence, sources, or uncertainty.
+- Keep the narration natural and useful.
+- Aim for {minimum_words} to {maximum_words} words.
+- Return only structured output matching the requested schema.
+""".strip()
+
+    rewritten = ask_llm(
+        system_prompt=system_prompt,
+        user_prompt=prompt,
+        schema=VideoScript,
+        temperature=temperature,
+        seed=seed,
+    )
+
+    rewritten.topic = script.topic
+
+    return normalize_script(
+        rewritten,
+        words_per_minute=target_wpm,
+    )
+
+def _verify_and_rewrite_once(
+    *,
+    script: VideoScript,
+    evidence_bundles: list[ClaimEvidenceBundle],
+    system_prompt: str,
+    target_wpm: int,
+    minimum_words: int,
+    maximum_words: int,
+    temperature: float,
+    seed: int | None,
+    cache_root: Path,
+    use_cache: bool,
+    force_refresh: bool,
+) -> tuple[list[ClaimVerification], VideoScript]:
+    """Use one Ollama response for verdicts and the corrected script."""
+    if not evidence_bundles:
+        return [], normalize_script(
+            script.model_copy(deep=True),
+            target_wpm,
+        )
+
+    cache_path = _combined_decision_cache_path(
+        cache_root,
+        script,
+        evidence_bundles,
+        minimum_words,
+        maximum_words,
+    )
+
+    result: CombinedFactCheckResult | None = None
+
+    if use_cache and not force_refresh and cache_path.exists():
+        try:
+            result = CombinedFactCheckResult.model_validate_json(
+                cache_path.read_text(encoding="utf-8")
+            )
+            print(
+                "[CACHE] Reused combined fact-check decision.",
+                flush=True,
+            )
+        except (OSError, ValueError):
+            result = None
+
+    if result is None:
+        result = ask_llm(
+            system_prompt=system_prompt,
+            user_prompt=_build_combined_fact_check_prompt(
+                script=script,
+                evidence_bundles=evidence_bundles,
+                minimum_words=minimum_words,
+                maximum_words=maximum_words,
+            ),
+            schema=CombinedFactCheckResult,
+            temperature=temperature,
+            seed=seed,
+        )
+
+        if use_cache:
+            cache_path.parent.mkdir(
+                parents=True,
+                exist_ok=True,
+            )
+            cache_path.write_text(
+                result.model_dump_json(indent=2),
+                encoding="utf-8",
+            )
+
+    raw_verdicts = {
+        verification.claim_id: verification.verdict
+        for verification in result.verifications
+    }
+
+    verifications = _normalize_verifications(
+        raw_verifications=result.verifications,
+        evidence_bundles=evidence_bundles,
+    )
+
+    corrected = result.corrected_script
+    corrected.topic = script.topic
+    corrected = normalize_script(
+        corrected,
+        words_per_minute=target_wpm,
+    )
+
+    downgraded_claim_ids = {
+        verification.claim_id
+        for verification in verifications
+        if (
+            raw_verdicts.get(verification.claim_id) == "supported"
+            and verification.verdict != "supported"
+        )
+    }
+
+    if downgraded_claim_ids:
+        print(
+            "[WARNING] Post-validation rejected "
+            f"{len(downgraded_claim_ids)} previously supported claim(s). "
+            "Running one correction-only rewrite.",
+            flush=True,
+        )
+
+        corrected = _rewrite_after_verification_downgrade(
+            script=corrected,
+            verifications=[
+                verification
+                for verification in verifications
+                if verification.claim_id in downgraded_claim_ids
+            ],
+            claims=[
+                bundle.claim
+                for bundle in evidence_bundles
+            ],
+            system_prompt=system_prompt,
+            target_wpm=target_wpm,
+            minimum_words=minimum_words,
+            maximum_words=maximum_words,
+            temperature=temperature,
+            seed=seed,
+        )
+
+    if len(corrected.sections) != len(script.sections):
+        print(
+            "[WARNING] Corrected script changed the body-section count "
+            f"from {len(script.sections)} to {len(corrected.sections)}. "
+            "The script will still be used.",
+            flush=True,
+        )
+
+    if corrected.word_count < minimum_words:
+        print(
+            "[WARNING] Corrected script contains "
+            f"{corrected.word_count} words, below the "
+            f"{minimum_words}-word target. It will be accepted rather "
+            "than discarding the completed run.",
+            flush=True,
+        )
+    elif corrected.word_count > maximum_words:
+        print(
+            "[WARNING] Corrected script contains "
+            f"{corrected.word_count} words, above the "
+            f"{maximum_words}-word target. It will be accepted rather "
+            "than making another slow model call.",
+            flush=True,
+        )
+
+    return verifications, corrected
+
+
+def _load_or_generate_outline(
+    *,
+    topic: VideoTopic,
+    path: Path,
+    config: BatchConfig,
+    system_prompt: str,
+    seed: int,
+) -> VideoOutline:
+    if config.reuse_existing_intermediates and path.exists():
+        print(f"[REUSE] Outline: {path}", flush=True)
+        return _load_json_model(path, VideoOutline)
+
+    outline = generate_outline(
+        topic=topic,
+        system_prompt=system_prompt,
+        target_seconds=config.target_seconds,
+        section_count=config.section_count,
+        temperature=config.outline_temperature,
+        seed=seed,
+    )
+    save_outline(outline=outline, output_path=path)
+    return outline
+
+
+def _load_or_generate_script(
+    *,
+    outline: VideoOutline,
+    path: Path,
+    config: BatchConfig,
+    system_prompt: str,
+    seed: int,
+) -> VideoScript:
+    if config.reuse_existing_intermediates and path.exists():
+        print(f"[REUSE] Script: {path}", flush=True)
+        return _load_json_model(path, VideoScript)
+
+    script = generate_script(
+        outline=outline,
+        system_prompt=system_prompt,
+        target_wpm=config.target_words_per_minute,
+        temperature=config.script_temperature,
+        seed=seed,
+    )
+    save_generated_script(script=script, output_path=path)
+    return script
+
+
+def _load_or_edit_script(
+    *,
+    script: VideoScript,
+    path: Path,
+    config: BatchConfig,
+    system_prompt: str,
+    seed: int,
+) -> tuple[VideoScript, str]:
+    if config.reuse_existing_intermediates and path.exists():
+        print(f"[REUSE] Edited script: {path}", flush=True)
+        return _load_json_model(path, VideoScript), "script_editing_reused"
+
+    if config.skip_script_editor:
+        edited_script = normalize_script(
+            script.model_copy(deep=True),
+            config.target_words_per_minute,
+        )
+        save_edited_script(
+            script=edited_script,
+            output_path=path,
+        )
+        print(
+            "[SKIP] Separate script-editor Ollama call disabled.",
+            flush=True,
+        )
+        return edited_script, "script_editing_skipped"
+
+    edited_script = edit_script(
+        script=script,
+        system_prompt=system_prompt,
+        target_wpm=config.target_words_per_minute,
+        minimum_seconds=config.editor_minimum_seconds,
+        maximum_seconds=config.editor_maximum_seconds,
+        temperature=config.editor_temperature,
+        seed=seed,
+    )
+    save_edited_script(
+        script=edited_script,
+        output_path=path,
+    )
+    return edited_script, "script_editing"
 
 
 def _run_one_topic(
@@ -489,6 +1200,7 @@ def _run_one_topic(
     started = _utc_now()
     stages_completed: list[str] = []
     paths: dict[str, str] = {}
+    timings: dict[str, float] = {}
     stage = "initialization"
 
     existing = _find_existing_render_for_topic(
@@ -516,103 +1228,129 @@ def _run_one_topic(
     try:
         seed_offset = item_number - 1
 
-        stage = "outline_generation"
-        outline = generate_outline(
-            topic=topic,
-            system_prompt=prompts["outline"],
-            target_seconds=config.target_seconds,
-            section_count=config.section_count,
-            temperature=config.outline_temperature,
-            seed=config.outline_seed + seed_offset,
-        )
         outline_path = (
             directories["outlines"]
             / build_outline_filename(topic)
         )
-        save_outline(outline=outline, output_path=outline_path)
+
+        stage = "outline_generation"
+        with _stage_timer("Outline generation", timings):
+            outline = _load_or_generate_outline(
+                topic=topic,
+                path=outline_path,
+                config=config,
+                system_prompt=prompts["outline"],
+                seed=config.outline_seed + seed_offset,
+            )
         paths["outline"] = str(outline_path)
         stages_completed.append(stage)
 
-        stage = "script_generation"
-        script = generate_script(
-            outline=outline,
-            system_prompt=prompts["script"],
-            target_wpm=config.target_words_per_minute,
-            temperature=config.script_temperature,
-            seed=config.script_seed + seed_offset,
-        )
         script_path = (
             directories["scripts"]
             / build_script_filename(outline)
         )
-        save_generated_script(
-            script=script,
-            output_path=script_path,
-        )
+
+        stage = "script_generation"
+        with _stage_timer("Script generation", timings):
+            script = _load_or_generate_script(
+                outline=outline,
+                path=script_path,
+                config=config,
+                system_prompt=prompts["script"],
+                seed=config.script_seed + seed_offset,
+            )
         paths["script"] = str(script_path)
         stages_completed.append(stage)
 
-        stage = "script_editing"
-        edited_script = edit_script(
-            script=script,
-            system_prompt=prompts["editor"],
-            target_wpm=config.target_words_per_minute,
-            minimum_seconds=config.editor_minimum_seconds,
-            maximum_seconds=config.editor_maximum_seconds,
-            temperature=config.editor_temperature,
-            seed=config.editor_seed + seed_offset,
-        )
         edited_script_path = (
             directories["edited_scripts"]
-            / build_edited_script_filename(edited_script)
+            / build_edited_script_filename(script)
         )
-        save_edited_script(
-            script=edited_script,
-            output_path=edited_script_path,
-        )
+
+        stage = "script_editing"
+        with _stage_timer("Script editing", timings):
+            edited_script, editor_stage = _load_or_edit_script(
+                script=script,
+                path=edited_script_path,
+                config=config,
+                system_prompt=prompts["editor"],
+                seed=config.editor_seed + seed_offset,
+            )
         paths["edited_script"] = str(edited_script_path)
+        stages_completed.append(editor_stage)
+
+        cache_root = directories["data"] / "retrieval_cache"
+
+        stage = "claim_extraction"
+        with _stage_timer("Claim extraction", timings):
+            claims = _extract_claims_cached(
+                script=edited_script,
+                system_prompt=prompts["fact_checker"],
+                max_claims=config.fact_check_max_claims,
+                temperature=config.fact_check_temperature,
+                seed=config.fact_check_seed + seed_offset,
+                cache_root=cache_root,
+                use_cache=config.use_claim_cache,
+                force_refresh=config.force_refresh_fact_check,
+            )
+        stages_completed.append(stage)
+        print(
+            f"Claims selected for checking: {len(claims)}",
+            flush=True,
+        )
+
+        stage = "evidence_retrieval"
+        with _stage_timer("Evidence retrieval", timings):
+            evidence_bundles = _retrieve_evidence_parallel(
+                claims=claims,
+                cache_directory=cache_root,
+                max_search_results=(
+                    config.fact_check_max_search_results
+                ),
+                max_sources_per_claim=(
+                    config.fact_check_max_sources_per_claim
+                ),
+                max_excerpt_chars=(
+                    config.fact_check_max_excerpt_chars
+                ),
+                cache_ttl_days=(
+                    config.fact_check_cache_ttl_days
+                ),
+                force_refresh=config.force_refresh_fact_check,
+                max_workers=(
+                    config.fact_check_retrieval_workers
+                ),
+            )
         stages_completed.append(stage)
 
         stage = "fact_checking"
-        
-        claims = extract_claims(
-            script=edited_script,
-            system_prompt=prompts["fact_checker"],
-            max_claims=6,
-            temperature=config.fact_check_temperature,
-            seed=config.fact_check_seed + seed_offset,
-        )
-
-        evidence_bundles = retrieve_evidence(
-            claims=claims,
-            cache_directory=(
-                directories["data"] / "retrieval_cache"
-            ),
-            max_search_results=8,
-            max_sources_per_claim=3,
-            max_excerpt_chars=1000,
-            cache_ttl_days=30,
-            force_refresh=False,
-        )
-
-        verifications = verify_claims(
-            evidence_bundles=evidence_bundles,
-            system_prompt=prompts["fact_checker"],
-            temperature=0.0,
-            seed=config.fact_check_seed + seed_offset,
-        )
-
-        corrected_script = rewrite_corrected_script(
-            script=edited_script,
-            evidence_bundles=evidence_bundles,
-            verifications=verifications,
-            system_prompt=prompts["fact_checker"],
-            target_wpm=config.target_words_per_minute,
-            minimum_words=config.fact_check_minimum_words,
-            maximum_words=config.fact_check_maximum_words,
-            temperature=0.2,
-            seed=config.fact_check_seed + seed_offset,
-        )
+        with _stage_timer(
+            "Combined verification and rewrite",
+            timings,
+        ):
+            verifications, corrected_script = (
+                _verify_and_rewrite_once(
+                    script=edited_script,
+                    evidence_bundles=evidence_bundles,
+                    system_prompt=prompts["fact_checker"],
+                    target_wpm=config.target_words_per_minute,
+                    minimum_words=(
+                        config.fact_check_minimum_words
+                    ),
+                    maximum_words=(
+                        config.fact_check_maximum_words
+                    ),
+                    temperature=0.0,
+                    seed=config.fact_check_seed + seed_offset,
+                    cache_root=cache_root,
+                    use_cache=(
+                        config.use_fact_check_decision_cache
+                    ),
+                    force_refresh=(
+                        config.force_refresh_fact_check
+                    ),
+                )
+            )
 
         report = build_fact_check_report(
             claims=claims,
@@ -634,10 +1372,7 @@ def _run_one_topic(
             script=corrected_script,
             output_path=checked_script_path,
         )
-        save_report(
-            report=report,
-            output_path=report_path,
-        )
+        save_report(report=report, output_path=report_path)
         paths["checked_script"] = str(checked_script_path)
         paths["fact_check_report"] = str(report_path)
         stages_completed.append(stage)
@@ -646,6 +1381,7 @@ def _run_one_topic(
             report.requires_manual_review
             and config.pause_on_manual_review
         ):
+            _print_timing_summary(timings)
             return (
                 PipelineItemResult(
                     item_number=item_number,
@@ -655,8 +1391,8 @@ def _run_one_topic(
                     final_stage=stage,
                     message=(
                         "Fact checking completed, but the topic was held "
-                        "before publication assets because manual review is "
-                        "enabled."
+                        "before publication assets because manual review "
+                        "is enabled."
                     ),
                     fact_check_verdict=report.verdict,
                     requires_manual_review=True,
@@ -669,75 +1405,85 @@ def _run_one_topic(
             )
 
         stage = "metadata_generation"
-        metadata = generate_metadata(
-            script=corrected_script,
-            report=report,
-            system_prompt=prompts["metadata"],
-            source_script_filename=checked_script_path.name,
-            fact_check_report_filename=report_path.name,
-            temperature=config.metadata_temperature,
-            seed=config.metadata_seed + seed_offset,
-            max_attempts=config.metadata_max_attempts,
-        )
-        metadata_path = (
-            directories["metadata"]
-            / build_metadata_filename(metadata)
-        )
-        save_metadata(
-            metadata=metadata,
-            output_path=metadata_path,
-        )
+        with _stage_timer("Metadata generation", timings):
+            metadata = generate_metadata(
+                script=corrected_script,
+                report=report,
+                system_prompt=prompts["metadata"],
+                source_script_filename=checked_script_path.name,
+                fact_check_report_filename=report_path.name,
+                temperature=config.metadata_temperature,
+                seed=config.metadata_seed + seed_offset,
+                max_attempts=config.metadata_max_attempts,
+            )
+            metadata_path = (
+                directories["metadata"]
+                / build_metadata_filename(metadata)
+            )
+            save_metadata(
+                metadata=metadata,
+                output_path=metadata_path,
+            )
         paths["metadata"] = str(metadata_path)
         stages_completed.append(stage)
 
         stage = "tts_generation"
-        if synthesizer is None:
-            synthesizer = KokoroSynthesizer(
-                language_code=config.tts_language_code,
-                voice=config.tts_voice,
-                speed=config.tts_speed,
-                chunk_pause_ms=config.tts_chunk_pause_ms,
-            )
+        with _stage_timer("Kokoro TTS", timings):
+            if synthesizer is None:
+                synthesizer = KokoroSynthesizer(
+                    language_code=config.tts_language_code,
+                    voice=config.tts_voice,
+                    speed=config.tts_speed,
+                    chunk_pause_ms=config.tts_chunk_pause_ms,
+                )
 
-        tts_result = generate_tts_assets(
-            script=corrected_script,
-            metadata=metadata,
-            metadata_filename=metadata_path.name,
-            output_root=directories["audio"],
-            synthesizer=synthesizer,
-            segment_pause_ms=config.tts_segment_pause_ms,
-            pronunciation_replacements=(
-                config.pronunciation_replacements
-            ),
-            normalize_contextual_years=(
-                config.normalize_contextual_years
-            ),
-            trim_edge_silence=config.trim_tts_edge_silence,
-            target_peak_dbfs=config.tts_target_peak_dbfs,
-        )
+            tts_result = generate_tts_assets(
+                script=corrected_script,
+                metadata=metadata,
+                metadata_filename=metadata_path.name,
+                output_root=directories["audio"],
+                synthesizer=synthesizer,
+                segment_pause_ms=config.tts_segment_pause_ms,
+                pronunciation_replacements=(
+                    config.pronunciation_replacements
+                ),
+                normalize_contextual_years=(
+                    config.normalize_contextual_years
+                ),
+                trim_edge_silence=(
+                    config.trim_tts_edge_silence
+                ),
+                target_peak_dbfs=config.tts_target_peak_dbfs,
+            )
         paths["tts_manifest"] = str(tts_result.manifest_path)
         paths["narration"] = str(tts_result.master_audio_path)
         paths["transcript"] = str(tts_result.transcript_path)
         stages_completed.append(stage)
 
         stage = "caption_generation"
-        caption_manifest = generate_caption_assets(
-            tts_manifest=tts_result.manifest,
-            source_tts_manifest_path=tts_result.manifest_path,
-            output_root=directories["captions"],
-            caption_style=config.caption_style,
-            max_words_per_cue=config.max_words_per_cue,
-            max_characters_per_line=(
-                config.max_characters_per_line
-            ),
-            max_lines=config.max_caption_lines,
-            minimum_cue_seconds=config.minimum_cue_seconds,
-            maximum_cue_seconds=config.maximum_cue_seconds,
-            ass_font_name=config.ass_font_name,
-            ass_font_size=config.ass_font_size,
-            ass_margin_v=config.ass_margin_v,
+        with _stage_timer("Caption generation", timings):
+            caption_manifest = generate_caption_assets(
+                tts_manifest=tts_result.manifest,
+                source_tts_manifest_path=(
+                    tts_result.manifest_path
+                ),
+                output_root=directories["captions"],
+                caption_style=config.caption_style,
+                max_words_per_cue=config.max_words_per_cue,
+                max_characters_per_line=(
+                    config.max_characters_per_line
+                ),
+                max_lines=config.max_caption_lines,
+                minimum_cue_seconds=config.minimum_cue_seconds,
+                maximum_cue_seconds=config.maximum_cue_seconds,
+                ass_font_name=config.ass_font_name,
+                ass_font_size=config.ass_font_size,
+                ass_margin_v=config.ass_margin_v,
+            )
+
+        caption_directory = Path(
+            caption_manifest.output_directory
         )
-        caption_directory = Path(caption_manifest.output_directory)
         caption_manifest_path = (
             caption_directory / "caption_manifest.json"
         )
@@ -749,23 +1495,31 @@ def _run_one_topic(
         stages_completed.append(stage)
 
         stage = "video_assembly"
-        render_manifest = render_video(
-            project_root=project_root,
-            metadata_path=metadata_path,
-            background_video_path=background_video_path,
-            output_root=directories["videos"],
-            output_width=config.output_width,
-            output_height=config.output_height,
-            crop_anchor_y=config.crop_anchor_y,
-            random_seed=config.video_random_seed + seed_offset,
-            duration_extra_seconds=config.duration_extra_seconds,
-            start_padding_seconds=config.start_padding_seconds,
-            end_padding_seconds=config.end_padding_seconds,
-            loop_background=config.loop_background,
-            crf=config.video_crf,
-            preset=config.video_preset,
-            audio_bitrate=config.audio_bitrate,
-        )
+        with _stage_timer("Video assembly", timings):
+            render_manifest = render_video(
+                project_root=project_root,
+                metadata_path=metadata_path,
+                background_video_path=background_video_path,
+                output_root=directories["videos"],
+                output_width=config.output_width,
+                output_height=config.output_height,
+                crop_anchor_y=config.crop_anchor_y,
+                random_seed=(
+                    config.video_random_seed + seed_offset
+                ),
+                duration_extra_seconds=(
+                    config.duration_extra_seconds
+                ),
+                start_padding_seconds=(
+                    config.start_padding_seconds
+                ),
+                end_padding_seconds=config.end_padding_seconds,
+                loop_background=config.loop_background,
+                crf=config.video_crf,
+                preset=config.video_preset,
+                audio_bitrate=config.audio_bitrate,
+            )
+
         render_directory = Path(render_manifest.output_directory)
         final_video_path = (
             render_directory
@@ -778,18 +1532,30 @@ def _run_one_topic(
         paths["final_video"] = str(final_video_path)
         stages_completed.append(stage)
 
+        _print_timing_summary(timings)
+
+        final_status = (
+            "manual_review"
+            if report.requires_manual_review
+            else "completed"
+        )
+
+        final_message = (
+            "Video rendered, but publication is blocked pending manual review."
+            if report.requires_manual_review
+            else "Finished the optimized educational-short pipeline."
+        )
+
         return (
             PipelineItemResult(
                 item_number=item_number,
                 topic_index=topic_index,
                 topic_title=topic.title,
-                status="completed",
+                status=final_status,
                 final_stage=stage,
-                message="Finished the complete educational-short pipeline.",
+                message=final_message,
                 fact_check_verdict=report.verdict,
-                requires_manual_review=(
-                    report.requires_manual_review
-                ),
+                requires_manual_review=report.requires_manual_review,
                 stages_completed=stages_completed,
                 paths=paths,
                 started_at_utc=started,
@@ -799,6 +1565,7 @@ def _run_one_topic(
         )
 
     except Exception as error:
+        _print_timing_summary(timings)
         return (
             PipelineItemResult(
                 item_number=item_number,
@@ -823,10 +1590,10 @@ def run_batch_pipeline(
     selected_topic_indexes: list[int],
     config: BatchConfig,
 ) -> BatchRunManifest:
-    """Run selected candidate topics through the complete pipeline."""
+    """Run selected topics through the optimized pipeline."""
     indexes = _validate_selected_indexes(
-        topics=plan.topics,
-        selected_topic_indexes=selected_topic_indexes,
+        plan,
+        selected_topic_indexes,
     )
     selected_topics = [
         plan.topics.topics[index]
@@ -842,10 +1609,8 @@ def run_batch_pipeline(
         filename=config.background_video_filename,
     )
 
-    # Fail early before any expensive LLM or TTS calls.
     find_ffmpeg_executable()
     find_ffprobe_executable()
-
     prompts = _load_pipeline_prompts()
 
     run_id = _run_id()
@@ -853,12 +1618,12 @@ def run_batch_pipeline(
     manifest_path = output_directory / "batch_manifest.json"
 
     manifest = BatchRunManifest(
+        marker="NOTEBOOK_12_BATCH_PIPELINE",
         run_id=run_id,
         category_path=plan.category_path,
         selected_topic_indexes=indexes,
         selected_topic_titles=[
-            topic.title
-            for topic in selected_topics
+            topic.title for topic in selected_topics
         ],
         status="completed",
         output_directory=str(output_directory),
@@ -870,6 +1635,14 @@ def run_batch_pipeline(
 
     synthesizer: KokoroSynthesizer | None = None
     aborted = False
+
+    print(
+        "Optimized pipeline enabled: "
+        f"editor skipped={config.skip_script_editor}, "
+        f"max claims={config.fact_check_max_claims}, "
+        "verification and rewrite combined into one model call.",
+        flush=True,
+    )
 
     for item_number, (topic_index, topic) in enumerate(
         zip(indexes, selected_topics, strict=True),
@@ -924,41 +1697,10 @@ def run_batch_pipeline(
     return manifest
 
 
-def summarize_topic_plan(
-    plan: TopicBatchPlan,
-) -> dict[str, object]:
-    return {
-        "candidate_run_id": plan.run_id,
-        "category_path": " > ".join(plan.category_path),
-        "candidate_count": len(plan.topics.topics),
-        "topics_file": plan.topics_file,
-    }
-
-
-def summarize_batch_manifest(
-    manifest: BatchRunManifest,
-) -> dict[str, object]:
-    counts = {
-        status: sum(
-            item.status == status
-            for item in manifest.items
-        )
-        for status in [
-            "completed",
-            "manual_review",
-            "skipped_existing",
-            "failed",
-        ]
-    }
-
-    return {
-        "run_id": manifest.run_id,
-        "status": manifest.status,
-        "selected_topics": len(manifest.selected_topic_indexes),
-        **counts,
-        "output_directory": manifest.output_directory,
-        "manifest": str(
-            Path(manifest.output_directory)
-            / manifest.manifest_filename
-        ),
-    }
+__all__ = [
+    "BatchConfig",
+    "TopicBatchPlan",
+    "preflight_batch_pipeline",
+    "run_batch_pipeline",
+    "summarize_batch_manifest",
+]
