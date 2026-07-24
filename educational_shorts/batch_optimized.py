@@ -606,6 +606,77 @@ def _combined_decision_cache_path(
         / f"{digest}.json"
     )
 
+def _rewrite_after_verification_downgrade(
+    *,
+    script: VideoScript,
+    verifications: list[ClaimVerification],
+    claims: list[FactualClaim],
+    system_prompt: str,
+    target_wpm: int,
+    minimum_words: int,
+    maximum_words: int,
+    temperature: float,
+    seed: int | None,
+) -> VideoScript:
+    claim_by_id = {
+        claim.claim_id: claim
+        for claim in claims
+    }
+
+    rejected_claims = []
+
+    for verification in verifications:
+        if verification.verdict != "insufficient_evidence":
+            continue
+
+        claim = claim_by_id.get(verification.claim_id)
+
+        if claim is None:
+            continue
+
+        rejected_claims.append(
+            {
+                "claim": claim.model_dump(),
+                "reason": verification.explanation,
+            }
+        )
+
+    prompt = f"""
+A previous fact-checking response produced this narration:
+
+{json.dumps(script.model_dump(), indent=2, ensure_ascii=False)}
+
+Post-validation rejected the following claims because their supplied evidence
+was insufficient:
+
+{json.dumps(rejected_claims, indent=2, ensure_ascii=False)}
+
+Rewrite the narration so those rejected claims are removed or softened.
+
+Requirements:
+- Preserve the exact topic.
+- Preserve the spoken order and number of body sections.
+- Do not introduce replacement facts from memory.
+- Do not mention fact checking, evidence, sources, or uncertainty.
+- Keep the narration natural and useful.
+- Aim for {minimum_words} to {maximum_words} words.
+- Return only structured output matching the requested schema.
+""".strip()
+
+    rewritten = ask_llm(
+        system_prompt=system_prompt,
+        user_prompt=prompt,
+        schema=VideoScript,
+        temperature=temperature,
+        seed=seed,
+    )
+
+    rewritten.topic = script.topic
+
+    return normalize_script(
+        rewritten,
+        words_per_minute=target_wpm,
+    )
 
 def _verify_and_rewrite_once(
     *,
@@ -674,6 +745,11 @@ def _verify_and_rewrite_once(
                 encoding="utf-8",
             )
 
+    raw_verdicts = {
+        verification.claim_id: verification.verdict
+        for verification in result.verifications
+    }
+
     verifications = _normalize_verifications(
         raw_verifications=result.verifications,
         evidence_bundles=evidence_bundles,
@@ -685,6 +761,42 @@ def _verify_and_rewrite_once(
         corrected,
         words_per_minute=target_wpm,
     )
+
+    downgraded_claim_ids = {
+        verification.claim_id
+        for verification in verifications
+        if (
+            raw_verdicts.get(verification.claim_id) == "supported"
+            and verification.verdict != "supported"
+        )
+    }
+
+    if downgraded_claim_ids:
+        print(
+            "[WARNING] Post-validation rejected "
+            f"{len(downgraded_claim_ids)} previously supported claim(s). "
+            "Running one correction-only rewrite.",
+            flush=True,
+        )
+
+        corrected = _rewrite_after_verification_downgrade(
+            script=corrected,
+            verifications=[
+                verification
+                for verification in verifications
+                if verification.claim_id in downgraded_claim_ids
+            ],
+            claims=[
+                bundle.claim
+                for bundle in evidence_bundles
+            ],
+            system_prompt=system_prompt,
+            target_wpm=target_wpm,
+            minimum_words=minimum_words,
+            maximum_words=maximum_words,
+            temperature=temperature,
+            seed=seed,
+        )
 
     if len(corrected.sections) != len(script.sections):
         print(
