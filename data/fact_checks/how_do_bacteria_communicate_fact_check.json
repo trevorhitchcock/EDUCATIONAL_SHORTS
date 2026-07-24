@@ -5,48 +5,32 @@
       "claim_id": "claim_1",
       "segment_type": "What Is Quorum Sensing?",
       "original_text": "They use chemical signals called quorum sensing to know when they’re in a crowd.",
-      "atomic_claim": "Bacteria use chemical signals called quorum sensing to determine when they are in a crowd.",
-      "search_query": "quorum sensing bacteria definition",
+      "atomic_claim": "Bacteria use chemical signals called quorum sensing to determine their population density.",
+      "search_query": "quorum sensing bacteria population density mechanism",
       "importance": "high"
     },
     {
       "claim_id": "claim_2",
-      "segment_type": "What Is Quorum Sensing?",
-      "original_text": "These molecules act as messages between bacteria.",
-      "atomic_claim": "The chemical signals used by bacteria act as messages between them.",
-      "search_query": "quorum sensing bacterial communication mechanism",
+      "segment_type": "How Do They Send Messages?",
+      "original_text": "Bacteria release molecules into their environment. Other bacteria pick up these signals and respond accordingly.",
+      "atomic_claim": "Bacteria release signaling molecules into their environment, which are detected by other bacteria to trigger responses.",
+      "search_query": "bacterial communication signaling molecule detection",
       "importance": "high"
     },
     {
       "claim_id": "claim_3",
-      "segment_type": "How Do They Communicate?",
-      "original_text": "Bacteria release these chemicals into their environment.",
-      "atomic_claim": "Bacteria release chemical signals into their environment as a means of communication.",
-      "search_query": "bacterial quorum sensing signal release mechanism",
+      "segment_type": "What Happens When They Communicate?",
+      "original_text": "They form protective biofilms or switch from harmless to harmful states.",
+      "atomic_claim": "Bacterial communication leads to the formation of protective biofilms or a shift from harmless to harmful behavior.",
+      "search_query": "bacteria quorum sensing biofilm formation pathogenicity",
       "importance": "high"
     },
     {
       "claim_id": "claim_4",
-      "segment_type": "What Happens Next?",
-      "original_text": "They use this signal to form protective biofilms or switch from harmless to harmful states.",
-      "atomic_claim": "Bacteria use quorum sensing signals to form protective biofilms or transition from harmless to harmful states.",
-      "search_query": "quorum sensing bacterial biofilm formation",
-      "importance": "high"
-    },
-    {
-      "claim_id": "claim_5",
-      "segment_type": "Why Does This Matter?",
-      "original_text": "Scientists study it to develop new ways to fight infections and improve health.",
-      "atomic_claim": "Scientists study bacterial quorum sensing to develop methods for fighting infections and improving health.",
-      "search_query": "quorum sensing research applications in medicine",
-      "importance": "high"
-    },
-    {
-      "claim_id": "claim_6",
-      "segment_type": "Closing Takeaway",
-      "original_text": "Bacteria use chemical signals to talk, cooperate, and survive—key insights that drive breakthroughs in science and medicine.",
-      "atomic_claim": "Bacterial communication via chemical signals enables cooperation and survival, which are key insights driving scientific and medical breakthroughs.",
-      "search_query": "bacterial communication impact on science and medicine",
+      "segment_type": "Why It Matters",
+      "original_text": "Scientists study this communication to fight infections and develop new treatments.",
+      "atomic_claim": "Scientific research on bacterial communication is used to combat infections and create novel therapeutic strategies.",
+      "search_query": "bacterial quorum sensing medical applications treatments",
       "importance": "high"
     }
   ],
@@ -56,34 +40,26 @@
         "claim_id": "claim_1",
         "segment_type": "What Is Quorum Sensing?",
         "original_text": "They use chemical signals called quorum sensing to know when they’re in a crowd.",
-        "atomic_claim": "Bacteria use chemical signals called quorum sensing to determine when they are in a crowd.",
-        "search_query": "quorum sensing bacteria definition",
+        "atomic_claim": "Bacteria use chemical signals called quorum sensing to determine their population density.",
+        "search_query": "quorum sensing bacteria population density mechanism",
         "importance": "high"
       },
       "sources": [
         {
-          "title": "Quorum Sensing: Not Just a Bridge Between Bacteria - PMC",
-          "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC11955508/",
-          "domain": "pmc.ncbi.nlm.nih.gov",
-          "excerpt": "ABSTRACT\nThe study of quorum sensing (QS) has gained critical importance, offering insights into bacterial and microorganism communication. QS, regulated by autoinducers, synchronizes collective bacterial behaviors across diverse chemical signals and target genes. This review highlights innovative approaches to regulating QS, emphasizing the potential of quorum quenching and QS inhibitors to mitigate bacterial pathogenicity. These strategies have shown promise in aquaculture and plant resistance, disrupting QS pathways to combat infections. QS also provides opportunities for developing biosensors for early disease detection and preventing biofilm formation, which is critical to overcoming antimicrobial resistance. The applications of QS extend to cancer therapy, with targeted drug delivery systems utilizing QS mechanisms. Advancements in QS regulation, such as the use of nanomaterials, hydrogels, and microplastics, provide novel methods to modulate QS systems. This review explores the",
-          "source_score": 20,
-          "retrieved_at": "2026-07-22T17:33:30.013274+00:00"
+          "title": "Quorum sensing as a population-density-dependent determinant of bacterial physiology - PubMed",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/11450110/",
+          "domain": "pubmed.ncbi.nlm.nih.gov",
+          "excerpt": "Abstract\nThe discovery that bacterial cells can communicate with each other has led to the realization that bacteria are capable of exhibiting much more complex patterns of co-operative behaviour than would be expected for simple unicellular microorganisms. Now generically termed 'quorum sensing', bacterial cell-to-cell communication enables a bacterial population to mount a unified response that is advantageous to its survival by improving access to complex nutrients or environmental niches, collective defence against other competitive microorganisms or eukaryotic host defence mechanisms and optimization of population survival by differentiation into morphological forms better adapted to",
+          "source_score": 24,
+          "retrieved_at": "2026-07-24T17:06:07.059250+00:00"
         },
         {
           "title": "Quorum sensing as a mechanism to harness the wisdom of the crowds | Nature Communications",
           "url": "https://www.nature.com/articles/s41467-023-37950-7",
           "domain": "nature.com",
-          "excerpt": "Abstract\nBacteria release and sense small molecules called autoinducers in a process known as quorum sensing. The prevailing interpretation of quorum sensing is that by sensing autoinducer concentrations, bacteria estimate population density to regulate the expression of functions that are only beneficial when carried out by a sufficiently large number of cells. However, a major challenge to this interpretation is that the concentration of autoinducers strongly depends on the environment, often rendering autoinducer-based estimates of cell density unreliable. Here we propose an alternative interpretation of quorum sensing, where bacteria, by releasing and sensing autoinducers, harness social interactions to sense the environment as a collective. Using a computational model we show that this functionality can explain the evolution of quorum sensing and arises from individuals improving their estimation accuracy by pooling many imperfect estimates – analogous to the ‘wisdom of the",
-          "source_score": 16,
-          "retrieved_at": "2026-07-22T17:33:30.013274+00:00"
-        },
-        {
-          "title": "Quorum Sensing in Bacteria",
-          "url": "https://cwoer.ccbcmd.edu/science/microbiology/lecture/unit1/shape/quorum_sensing.html",
-          "domain": "cwoer.ccbcmd.edu",
-          "excerpt": "Bacterial Communication: Quorum Sensing in Bacteria\nMany bacteria are able to sense their own population density, communicate with each other by way of secreted chemical factors, and behave as a population rather than as individual bacteria . This is referred to as cell-to-cell signaling or quorum sensing and plays an important role in pathogenicity and survival for many bacteria.\nQuorum sensing (def) involves the production, release, and community-wide sensing of molecules called autoinducers (def) that modulate gene expression in response to the density of a bacterial population. When autoinducers produced by one bacterium cross the membrane of another, they bind to receptors in the cytoplasm. This autoinducer/receptor complex is then able to bind to DNA promoters and activate the transcription of quorum sensing-controlled genes. In this way, individual bacteria within a group are able to benefit from the activity of the entire group.\nThe outcomes of bacteria-host interaction are",
-          "source_score": 16,
-          "retrieved_at": "2026-07-22T17:33:30.013274+00:00"
+          "excerpt": "Abstract\nBacteria release and sense small molecules called autoinducers in a process known as quorum sensing. The prevailing interpretation of quorum sensing is that by sensing autoinducer concentrations, bacteria estimate population density to regulate the expression of functions that are only beneficial when carried out by a sufficiently large number of cells. However, a major challenge to this interpretation is that the concentration of autoinducers strongly depends on the environment, often rendering autoinducer-based estimates of cell density unreliable. Here we propose an alternative interpretation of quorum sensing, where bacteria, by releasing and sensing autoinducers, harness",
+          "source_score": 22,
+          "retrieved_at": "2026-07-24T17:06:07.059250+00:00"
         }
       ],
       "used_cache": true,
@@ -92,36 +68,28 @@
     {
       "claim": {
         "claim_id": "claim_2",
-        "segment_type": "What Is Quorum Sensing?",
-        "original_text": "These molecules act as messages between bacteria.",
-        "atomic_claim": "The chemical signals used by bacteria act as messages between them.",
-        "search_query": "quorum sensing bacterial communication mechanism",
+        "segment_type": "How Do They Send Messages?",
+        "original_text": "Bacteria release molecules into their environment. Other bacteria pick up these signals and respond accordingly.",
+        "atomic_claim": "Bacteria release signaling molecules into their environment, which are detected by other bacteria to trigger responses.",
+        "search_query": "bacterial communication signaling molecule detection",
         "importance": "high"
       },
       "sources": [
         {
-          "title": "(PDF) Quorum sensing: How bacteria respond to signals of each other",
-          "url": "https://www.academia.edu/23929542/Quorum_sensing_How_bacteria_respond_to_signals_of_each_other",
-          "domain": "academia.edu",
-          "excerpt": "The generic term ‘quorum sensing’ has been adopted to describe the bacterial cell-to-cell communication mechanisms which co-ordinate gene expression usually, but not always, when the population has reached a high cell density.",
-          "source_score": 18,
-          "retrieved_at": "2026-07-22T18:00:22.134433+00:00"
+          "title": "Bacterial Small-Molecule Signaling Pathways - PMC",
+          "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC2776824/",
+          "domain": "pmc.ncbi.nlm.nih.gov",
+          "excerpt": "Checking your browser before accessing pmc.ncbi.nlm.nih.gov ...\nClick \nhere if you are not automatically redirected after 5 seconds.",
+          "source_score": 24,
+          "retrieved_at": "2026-07-24T17:06:12.044524+00:00"
         },
         {
-          "title": "A review of quorum-sensing and its role in mediating interkingdom...",
-          "url": "https://www.nature.com/articles/s42003-025-07608-9?error=cookies_not_supported&code=206a83d9-b565-4d01-93e1-94e004dc15d8",
+          "title": "Deciphering bacterial signalling - Nature Chemistry",
+          "url": "https://www.nature.com/articles/s41557-019-0265-2",
           "domain": "nature.com",
-          "excerpt": "Abstract\nQuorum sensing, first described in marine systems five decades ago, is a well-characterized chemical communication system used to coordinate bacterial gene expression and behavior; however, the impact of quorum sensing on interkingdom interactions has been vastly understudied. In this review, we examine how these molecules mediate communication between bacteria and marine eukaryotes; influencing processes such as development, disease pathogenesis, and microbiome regulation within marine ecosystems. We describe the varied mechanisms eukaryotes have evolved to interfere with bacterial quorum sensing signaling, the crucial role these signals play in host-virus interactions, and how their exchange may be governed by outer membrane vesicles, prevalent in marine systems. Here, we present a dynamic portrayal of the impact of quorum sensing signals beyond bacterial communication, laying the groundwork for future investigations on their roles in shaping marine ecosystem structure and",
-          "source_score": 18,
-          "retrieved_at": "2026-07-22T18:00:22.134433+00:00"
-        },
-        {
-          "title": "Bacterial Quorum Sensing: The Most Ancient Language on Earth",
-          "url": "https://kids.frontiersin.org/articles/10.3389/frym.2023.1223179",
-          "domain": "kids.frontiersin.org",
-          "excerpt": "Abstract\nA few decades ago, scientists believed that bacteria were very basic creatures that did not communicate with each other and were only good at multiplying. Recently, we have realized that this is far from the truth! Bacteria communicate with one another using a language called quorum sensing. You can think of bacterial quorum sensing as the first-ever social network! In this article, we will tell you about the discovery of quorum sensing and how it radically changed our understanding of the microbial world. We will also tell you how our new knowledge of quorum sensing might help doctors to treat dangerous bacterial infections in humans. Join us in this journey exploring the fascinating language of bacteria and how it could benefit human health.\nDrs. Bonnie Bassler, Michael Silverman, and E. Peter Greenberg were awarded the 2023 Canada Gairdner International Award for their discoveries of how bacteria communicate with each other and surrounding non-bacterial cells, providing",
-          "source_score": 11,
-          "retrieved_at": "2026-07-22T18:00:22.134433+00:00"
+          "excerpt": "Bacterial communication is a potential strategy to control bacterial behaviours and thus, attenuate pathogen infectivity; however, identifying the signalling molecules that regulate communication pathways is challenging. Now, a robust strategy to rapidly identify previously unknown signalling peptides has been developed. This approach provides a means to map out and decipher bacterial signalling mechanisms.\nAccess options\nAccess Nature and 54 other Nature Portfolio journals\nGet Nature+, our best-value online-access subscription\n$32.99 / 30 days\ncancel any time\nSubscribe to this journal\nReceive 12 print issues and online access\n$259.00 per year\nonly $21.58 per issue\nRent or buy this",
+          "source_score": 14,
+          "retrieved_at": "2026-07-24T17:06:12.044524+00:00"
         }
       ],
       "used_cache": true,
@@ -130,36 +98,28 @@
     {
       "claim": {
         "claim_id": "claim_3",
-        "segment_type": "How Do They Communicate?",
-        "original_text": "Bacteria release these chemicals into their environment.",
-        "atomic_claim": "Bacteria release chemical signals into their environment as a means of communication.",
-        "search_query": "bacterial quorum sensing signal release mechanism",
+        "segment_type": "What Happens When They Communicate?",
+        "original_text": "They form protective biofilms or switch from harmless to harmful states.",
+        "atomic_claim": "Bacterial communication leads to the formation of protective biofilms or a shift from harmless to harmful behavior.",
+        "search_query": "bacteria quorum sensing biofilm formation pathogenicity",
         "importance": "high"
       },
       "sources": [
         {
-          "title": "Quorum Sensing and Bacterial Social Interactions in Biofilms",
-          "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC3376616/",
-          "domain": "pmc.ncbi.nlm.nih.gov",
-          "excerpt": "Checking your browser before accessing pmc.ncbi.nlm.nih.gov ...\nClick \nhere if you are not automatically redirected after 5 seconds.",
-          "source_score": 24,
-          "retrieved_at": "2026-07-22T18:00:31.323185+00:00"
+          "title": "Frontiers | Regulatory Mechanisms and Promising Applications of Quorum Sensing-Inhibiting Agents in Control of Bacterial Biofilm Formation",
+          "url": "https://www.frontiersin.org/journals/microbiology/articles/10.3389/fmicb.2020.589640/full",
+          "domain": "frontiersin.org",
+          "excerpt": "Abstract\nA biofilm is an assemblage of microbial cells attached to a surface and encapsulated in an extracellular polymeric substance (EPS) matrix. The formation of a biofilm is one of the important mechanisms of bacterial resistance, which not only leads to hard-to-control bacterial infections in humans and animals but also enables bacteria to be a major problem in various fields, such as food processing, wastewater treatment and metalworking. Quorum sensing (QS) is a bacterial cell-to-cell communication process that depends on the bacterial population density and is mediated by small diffusible signaling molecules called autoinducers (AIs). Bacteria use QS to regulate diverse arrays of",
+          "source_score": 13,
+          "retrieved_at": "2026-07-24T17:06:18.699022+00:00"
         },
         {
-          "title": "Quorum Sensing: Not Just a Bridge Between Bacteria - PMC",
-          "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC11955508/",
-          "domain": "pmc.ncbi.nlm.nih.gov",
-          "excerpt": "Checking your browser before accessing pmc.ncbi.nlm.nih.gov ...\nClick \nhere if you are not automatically redirected after 5 seconds.",
-          "source_score": 20,
-          "retrieved_at": "2026-07-22T18:00:31.323185+00:00"
-        },
-        {
-          "title": "Quorum sensing signal–response systems in Gram-negative bacteria - Nature",
-          "url": "https://www.nature.com/articles/nrmicro.2016.89",
-          "domain": "nature.com",
-          "excerpt": "Key Points\n- \n Quorum sensing is a cell–cell communication process that enables bacteria to obtain information about cell density and species composition of the vicinal community and adjust their gene expression profiles accordingly. Quorum sensing involves the production, release and detection of extracellular signalling molecules known as autoinducers. Group-wide detection of autoinducers enables bacteria to collectively execute behaviours. \n- \n Autoinducers are small molecules that control quorum sensing. In Gram-negative bacteria, autoinducers are often produced from S-adenosylmethionine (SAM). Autoinducers interact with specific receptors to elicit behaviours that are controlled by quorum sensing. \n- \n Quorum sensing receptors are either membrane-bound histidine sensor kinases or cytoplasmic transcription factors. \n- \n Autoinduction occurs when the detection of autoinducers induces the increased production of the same autoinducer molecule, forming a feed-forward regulatory loop.",
-          "source_score": 18,
-          "retrieved_at": "2026-07-22T18:00:31.323185+00:00"
+          "title": "Biofilm and Quorum sensing mediated pathogenicity in Pseudomonas aeruginosa - ScienceDirect",
+          "url": "https://www.sciencedirect.com/science/article/abs/pii/S1359511319313807",
+          "domain": "sciencedirect.com",
+          "excerpt": "June 4, 2020 - Quorum sensing controls biofilm formation and virulence factors of the bacteria. ... Pathogenicity and virulence factors of Pseudomonas aeruginosa is Quorum sensing dependent.",
+          "source_score": 12,
+          "retrieved_at": "2026-07-24T17:06:18.699022+00:00"
         }
       ],
       "used_cache": true,
@@ -168,178 +128,76 @@
     {
       "claim": {
         "claim_id": "claim_4",
-        "segment_type": "What Happens Next?",
-        "original_text": "They use this signal to form protective biofilms or switch from harmless to harmful states.",
-        "atomic_claim": "Bacteria use quorum sensing signals to form protective biofilms or transition from harmless to harmful states.",
-        "search_query": "quorum sensing bacterial biofilm formation",
+        "segment_type": "Why It Matters",
+        "original_text": "Scientists study this communication to fight infections and develop new treatments.",
+        "atomic_claim": "Scientific research on bacterial communication is used to combat infections and create novel therapeutic strategies.",
+        "search_query": "bacterial quorum sensing medical applications treatments",
         "importance": "high"
       },
       "sources": [
         {
-          "title": "Targeting the Holy Triangle of Quorum Sensing, Biofilm Formation...",
-          "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC9228545/",
+          "title": "Quorum Sensing: A Prospective Therapeutic Target for Bacterial ...",
+          "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC6475571/",
           "domain": "pmc.ncbi.nlm.nih.gov",
-          "excerpt": "Checking your browser before accessing pmc.ncbi.nlm.nih.gov ...\nClick \nhere if you are not automatically redirected after 5 seconds.",
-          "source_score": 22,
-          "retrieved_at": "2026-07-22T18:00:38.293900+00:00"
-        },
-        {
-          "title": "(PDF) Quorum Sensing: Unravelling the Intricacies of Microbial...",
-          "url": "https://www.academia.edu/106043161/Quorum_Sensing_Unravelling_the_Intricacies_of_Microbial_Communication_for_Biofilm_Formation_Biogeochemical_Cycling_and_Biotechnological_Applications",
-          "domain": "academia.edu",
-          "excerpt": "Biofilm formation, pathogenicity and the associated AMR are regulated through a bacterial cell-to-cell communication system termed \"Quorum Sensing (QS)' .",
+          "excerpt": "Abstract\nBacterial quorum sensing (QS) is a cell-to-cell communication in which specific signals are activated to coordinate pathogenic behaviors and help bacteria acclimatize to the disadvantages. The QS signals in the bacteria mainly consist of acyl-homoserine lactone, autoinducing peptide, and autoinducer-2. QS signaling activation and biofilm formation lead to the antimicrobial resistance of the pathogens, thus increasing the therapy difficulty of bacterial diseases. Anti-QS agents can abolish the QS signaling and prevent the biofilm formation, therefore reducing bacterial virulence without causing drug-resistant to the pathogens, suggesting that anti-QS agents are potential",
           "source_score": 20,
-          "retrieved_at": "2026-07-22T18:00:38.293900+00:00"
+          "retrieved_at": "2026-07-24T17:38:59.477789+00:00"
         },
         {
-          "title": "Quorum Sensing and Bacterial Pathogenicity: From Molecules...",
-          "url": "https://jlabphy.org/quorum-sensing-and-bacterial-pathogenicity-from-molecules-to-disease/",
-          "domain": "jlabphy.org",
-          "excerpt": "Quorum Sensing and Bacterial Pathogenicity: From Molecules to Disease\nAddress for correspondence: Dr. Antariksh Deep, E-mail: drantarikshdeep@hotmail.com\nThis article was originally published by Wolters Kluwer - Medknow and was migrated to Scientific Scholar after the change of Publisher.\nHow to cite this article: Deep A, Chaudhary U, Gupta V. Quorum sensing and bacterial pathogenicity: From molecules to disease. J Lab Physicians 2011;3:4-11.\nAbstract\nQuorum sensing in prokaryotic biology refers to the ability of a bacterium to sense information from other cells in the population when they reach a critical concentration (i.e. a Quorum) and communicate with them. The “language” used for this intercellular communication is based on small, self-generated signal molecules called as autoinducers. Quorum sensing is thought to afford pathogenic bacteria a mechanism to minimize host immune responses by delaying the production of tissue-damaging virulence factors until sufficient bacteria have",
-          "source_score": 13,
-          "retrieved_at": "2026-07-22T18:00:38.293900+00:00"
+          "title": "Natural product-based inhibitors of quorum sensing: A novel ...",
+          "url": "https://www.sciencedirect.com/science/article/pii/S2405580825001980",
+          "domain": "sciencedirect.com",
+          "excerpt": "... Applications of Quorum Sensing-Inhibiting Agents in Control of Bacterial ... Their application in food preservation, water treatment, and medical devices ...",
+          "source_score": 10,
+          "retrieved_at": "2026-07-24T17:38:59.477789+00:00"
         }
       ],
-      "used_cache": true,
-      "retrieval_error": null
-    },
-    {
-      "claim": {
-        "claim_id": "claim_5",
-        "segment_type": "Why Does This Matter?",
-        "original_text": "Scientists study it to develop new ways to fight infections and improve health.",
-        "atomic_claim": "Scientists study bacterial quorum sensing to develop methods for fighting infections and improving health.",
-        "search_query": "quorum sensing research applications in medicine",
-        "importance": "high"
-      },
-      "sources": [
-        {
-          "title": "Research Progress and Hopeful Strategies of Application of Quorum ...",
-          "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC9229978/",
-          "domain": "pmc.ncbi.nlm.nih.gov",
-          "excerpt": "Jun 10, 2022 ... Quorum sensing (QS) regulates the expression of several genes including motility, biofilm development, virulence expression, ...",
-          "source_score": 20,
-          "retrieved_at": "2026-07-22T18:00:44.254396+00:00"
-        },
-        {
-          "title": "Quorum sensing - Wikipedia",
-          "url": "https://en.wikipedia.org/wiki/Quorum_sensing",
-          "domain": "en.wikipedia.org",
-          "excerpt": "In biology, quorum sensing or quorum signaling (QS) is the process of cell-to-cell communication that allows bacteria to detect and respond to cell population density by gene regulation, typically as a means of acclimating to environmental disadvantages.\nQuorum sensing is a type of cellular signaling, and can be more specifically considered a type of paracrine signaling. However, it also contains traits of autocrine signaling: a cell produces both an autoinducer molecule and the receptor for the autoinducer. As one example, quorum sensing enables bacteria to restrict the expression of specific genes to the high cell densities at which the resulting phenotypes will be most beneficial, especially for phenotypes that would be ineffective at low cell densities and therefore too energetically costly to express.\nMany species of bacteria use quorum sensing to coordinate gene expression according to the density of their local population. In a similar fashion, some social insects use quorum",
-          "source_score": 8,
-          "retrieved_at": "2026-07-22T18:00:44.254396+00:00"
-        },
-        {
-          "title": "Quorum sensing: how bacteria stay in touch | BMG LABTECH",
-          "url": "https://www.bmglabtech.com/en/blog/quorum-sensing-how-bacteria-stay-in-touch/",
-          "domain": "bmglabtech.com",
-          "excerpt": "Quorum sensing is a well-studied intercellular communication system in bacteria that is triggered by and depends on secreted chemical signaling molecules called autoinducers. 1,2 The process allows a whole population of bacteria to collectively regulate gene expression and therefore their behavior as they reach a certain cell density. In this way, a bacterial population can act like a multicellular organism by synchronizing the actions of all members of a bacterial group.3\nQuorum sensing regulates a variety of different processes in bacteria, including bioluminescence, symbiosis, expression of virulence genes, as well as antimicrobial resistance and the formation of biofilms in different bacteria.\nIn this blog, we look at how microplate readers can be used to advance findings and applications in quorum sensing research. This includes understanding how quorum sensing offers new approaches for drug discovery, microbiology in general, and antimicrobial research.\nWhat triggers quorum",
-          "source_score": 8,
-          "retrieved_at": "2026-07-22T18:00:44.254396+00:00"
-        }
-      ],
-      "used_cache": true,
-      "retrieval_error": null
-    },
-    {
-      "claim": {
-        "claim_id": "claim_6",
-        "segment_type": "Closing Takeaway",
-        "original_text": "Bacteria use chemical signals to talk, cooperate, and survive—key insights that drive breakthroughs in science and medicine.",
-        "atomic_claim": "Bacterial communication via chemical signals enables cooperation and survival, which are key insights driving scientific and medical breakthroughs.",
-        "search_query": "bacterial communication impact on science and medicine",
-        "importance": "high"
-      },
-      "sources": [
-        {
-          "title": "Bacterial communication and group behavior - PMC - NIH",
-          "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC228476/",
-          "domain": "pmc.ncbi.nlm.nih.gov",
-          "excerpt": "Abstract\nThe existence of species-specific and interspecies bacterial cell-cell communication and group organization was only recently accepted. Researchers are now realizing that the ability of these microbial teams to communicate and form structures, known as biofilms, at key times during the establishment of infection significantly increases their ability to evade both host defenses and antibiotics. This Perspective series discusses the known signaling mechanisms, the roles they play in both chronic Gram-positive and Gram-negative infections, and promising therapeutic avenues of investigation.\nThe past decade has seen the emergence of a new field in basic microbiology. The new basic knowledge has led to interest and activity in developing therapeutic agents to treat certain kinds of persistent bacterial infections. Scientists had long held the view that bacterial cells behaved as self-sufficient individuals, unable to organize themselves into groups or communicate. During",
-          "source_score": 18,
-          "retrieved_at": "2026-07-22T18:00:49.547739+00:00"
-        },
-        {
-          "title": "How bacterial communication 'goes with the flow' in causing ...",
-          "url": "https://www.princeton.edu/news/2016/01/12/how-bacterial-communication-goes-flow-causing-infection-blockage",
-          "domain": "princeton.edu",
-          "excerpt": "The destructive ability of bacteria to organize an infection or block pathways such as intestines, medical stents and wastewater pipes relies on communication with one another.\nNew work from Princeton University researchers shows that the effectiveness of bacteria's ability to keep in touch is influenced by the physical characteristics and flow of fluid in the environments they're invading. The findings provide a better understanding of where and when in a system scientists can interfere with bacterial communication to help prevent infections and blockages.\nThe researchers replicated real-life environments in the laboratory and found that the shape of the spaces and the flow of fluids through them affected bacterial growth and the formation of slimy surface layers called biofilms. Published in the journal Nature Microbiology, the study also found that fluid flow can determine where and when bacteria begin to act as disease-causing agents.\nBacteria communicate through a chemical",
-          "source_score": 14,
-          "retrieved_at": "2026-07-22T18:00:49.547739+00:00"
-        },
-        {
-          "title": "Bacterial Communication - PhilSci-Archive",
-          "url": "http://philsci-archive.pitt.edu/19375/1/Bacterial+Communication+(Final).pdf",
-          "domain": "philsci-archive.pitt.edu",
-          "excerpt": "Do QS autoinducers qualify as genuine signals? Do bacteria really commu- nicate? When scientists assert that bacteria engage in cell-to-cell signaling, should ...",
-          "source_score": 14,
-          "retrieved_at": "2026-07-22T18:00:49.547739+00:00"
-        }
-      ],
-      "used_cache": true,
+      "used_cache": false,
       "retrieval_error": null
     }
   ],
   "verifications": [
     {
       "claim_id": "claim_1",
-      "verdict": "insufficient_evidence",
-      "severity": "medium",
-      "explanation": "The evidence quote exists in the retrieved source, but it does not cover enough of the claim to support every material part. Lexical coverage: 33%.",
+      "verdict": "supported",
+      "severity": "none",
+      "explanation": "The evidence directly supports the claim that bacteria use quorum sensing to determine population density.",
       "correction": null,
-      "supporting_urls": [],
-      "evidence_quote": "Quorum sensing (def) involves the production, release, and community-wide sensing of molecules called autoinducers (def) that modulate gene expression in response to the density of a bacterial population.",
-      "evidence_url": null
+      "supporting_urls": [
+        "https://www.nature.com/articles/s41467-023-37950-7"
+      ],
+      "evidence_quote": "Bacteria release and sense small molecules called autoinducers in a process known as quorum sensing. The prevailing interpretation of quorum sensing is that by sensing autoinducer concentrations, bacteria estimate population density to regulate the expression of functions that are only beneficial when carried out by a sufficiently large number of cells.",
+      "evidence_url": "https://www.nature.com/articles/s41467-023-37950-7"
     },
     {
       "claim_id": "claim_2",
       "verdict": "insufficient_evidence",
       "severity": "medium",
-      "explanation": "The evidence quote exists in the retrieved source, but it does not cover enough of the claim to support every material part. Lexical coverage: 0%.",
+      "explanation": "The evidence quote exists, but it does not cover enough of the claim. Lexical coverage: 11%.",
       "correction": null,
       "supporting_urls": [],
-      "evidence_quote": "The generic term ‘quorum sensing’ has been adopted to describe the bacterial cell-to-cell communication mechanisms which co-ordinate gene expression usually, but not always, when the population has reached a high cell density.",
+      "evidence_quote": null,
       "evidence_url": null
     },
     {
       "claim_id": "claim_3",
       "verdict": "insufficient_evidence",
       "severity": "medium",
-      "explanation": "The evidence quote exists in the retrieved source, but it does not cover enough of the claim to support every material part. Lexical coverage: 14%.",
+      "explanation": "The verifier marked this claim as supported but did not provide a valid quote copied from the supplied evidence.",
       "correction": null,
       "supporting_urls": [],
-      "evidence_quote": "Quorum sensing involves the production, release and detection of extracellular signalling molecules known as autoinducers.",
+      "evidence_quote": null,
       "evidence_url": null
     },
     {
       "claim_id": "claim_4",
       "verdict": "insufficient_evidence",
       "severity": "medium",
-      "explanation": "The evidence quote exists in the retrieved source, but it does not cover enough of the claim to support every material part. Lexical coverage: 17%.",
+      "explanation": "The evidence quote exists, but it does not cover enough of the claim. Lexical coverage: 9%.",
       "correction": null,
       "supporting_urls": [],
-      "evidence_quote": "Biofilm formation, pathogenicity and the associated AMR are regulated through a bacterial cell-to-cell communication system termed \"Quorum Sensing (QS)'",
+      "evidence_quote": null,
       "evidence_url": null
-    },
-    {
-      "claim_id": "claim_5",
-      "verdict": "overstated",
-      "severity": "medium",
-      "explanation": "The claim states that scientists study bacterial quorum sensing 'to develop new ways to fight infections and improve health.' While the evidence mentions that quorum sensing regulates processes like virulence expression, biofilm development, antimicrobial resistance, and drug discovery (BMG LABTECH), it does not explicitly state or support the specific assertion about developing methods for fighting infections and improving health. The claim overstates the direct application of research to these outcomes.",
-      "correction": null,
-      "supporting_urls": [],
-      "evidence_quote": "Quorum sensing regulates a variety of different processes in bacteria, including bioluminescence, symbiosis, expression of virulence genes, as well as antimicrobial resistance and the formation of biofilms in different bacteria. In this blog, we look at how microplate readers can be used to advance findings and applications in quorum sensing research. This includes understanding how quorum sensing offers new approaches for drug discovery, microbiology in general, and antimicrobial research.",
-      "evidence_url": "https://www.bmglabtech.com/en/blog/quorum-sensing-how-bacteria-stay-in-touch/"
-    },
-    {
-      "claim_id": "claim_6",
-      "verdict": "overstated",
-      "severity": "medium",
-      "explanation": "The evidence supports that bacteria use chemical signals to communicate and form biofilms, which contribute to their survival and ability to cause infections. However, the claim overstates by asserting these insights 'drive breakthroughs in science and medicine' without direct evidence of such breakthroughs being attributed to bacterial communication research.",
-      "correction": null,
-      "supporting_urls": [],
-      "evidence_quote": "The past decade has seen the emergence of a new field in basic microbiology. The new basic knowledge has led to interest and activity in developing therapeutic agents to treat certain kinds of persistent bacterial infections.",
-      "evidence_url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC228476/"
     }
   ],
   "corrected_script": {
@@ -354,40 +212,40 @@
     },
     "hook": {
       "segment_type": "Hook",
-      "narration": "Bacteria don’t just live alone—they talk.",
-      "estimated_seconds": 3
+      "narration": "Bacteria don’t just live—they talk.",
+      "estimated_seconds": 2
     },
     "sections": [
       {
         "segment_type": "What Is Quorum Sensing?",
-        "narration": "They use chemical signals to detect when they’re in a crowd. These molecules help bacteria sense their environment and coordinate behavior.",
+        "narration": "They use chemical signals called quorum sensing to determine their population density. These messages help them act together as a group.",
         "estimated_seconds": 9
       },
       {
-        "segment_type": "How Do They Communicate?",
-        "narration": "Bacteria release these chemicals into their surroundings. When concentrations reach certain levels, it signals that the population is large and active.",
-        "estimated_seconds": 9
+        "segment_type": "How Do They Send Messages?",
+        "narration": "Bacteria release molecules into their environment. Other bacteria pick up these signals and respond accordingly.",
+        "estimated_seconds": 6
       },
       {
-        "segment_type": "What Happens Next?",
-        "narration": "They use this signal to form protective biofilms or change how they behave. This helps them work together as a group in certain conditions.",
-        "estimated_seconds": 10
+        "segment_type": "What Happens When They Communicate?",
+        "narration": "They form protective biofilms or switch from harmless to harmful states. This coordination helps them survive in tough conditions.",
+        "estimated_seconds": 8
       },
       {
-        "segment_type": "Why Does This Matter?",
-        "narration": "This communication influences their behavior and survival. Scientists study it to better understand bacterial processes, which can lead to new approaches for managing infections.",
-        "estimated_seconds": 10
+        "segment_type": "Why It Matters",
+        "narration": "Scientists study this communication to fight infections and develop new treatments. Understanding it changes how we see microbial life.",
+        "estimated_seconds": 8
       }
     ],
     "closing": {
       "segment_type": "Closing Takeaway",
-      "narration": "Bacteria use chemical signals to communicate and coordinate—key insights that help scientists explore ways to manage bacterial behavior in health and disease.",
-      "estimated_seconds": 10
+      "narration": "Bacteria use chemical signals to work together, shaping their survival and influencing medical science in powerful ways.",
+      "estimated_seconds": 7
     },
-    "full_narration": "Bacteria don’t just live alone—they talk.\n\nThey use chemical signals to detect when they’re in a crowd. These molecules help bacteria sense their environment and coordinate behavior.\n\nBacteria release these chemicals into their surroundings. When concentrations reach certain levels, it signals that the population is large and active.\n\nThey use this signal to form protective biofilms or change how they behave. This helps them work together as a group in certain conditions.\n\nThis communication influences their behavior and survival. Scientists study it to better understand bacterial processes, which can lead to new approaches for managing infections.\n\nBacteria use chemical signals to communicate and coordinate—key insights that help scientists explore ways to manage bacterial behavior in health and disease.",
-    "word_count": 120,
-    "estimated_total_seconds": 51
+    "full_narration": "Bacteria don’t just live—they talk.\n\nThey use chemical signals called quorum sensing to determine their population density. These messages help them act together as a group.\n\nBacteria release molecules into their environment. Other bacteria pick up these signals and respond accordingly.\n\nThey form protective biofilms or switch from harmless to harmful states. This coordination helps them survive in tough conditions.\n\nScientists study this communication to fight infections and develop new treatments. Understanding it changes how we see microbial life.\n\nBacteria use chemical signals to work together, shaping their survival and influencing medical science in powerful ways.",
+    "word_count": 97,
+    "estimated_total_seconds": 40
   },
   "requires_manual_review": true,
-  "summary": "Checked 6 claims: 0 supported, 0 contradicted, 2 overstated, and 4 unresolved."
+  "summary": "Checked 4 claims: 1 supported, 0 contradicted, 0 overstated, and 3 unresolved."
 }
