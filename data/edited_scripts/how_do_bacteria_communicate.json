@@ -10,37 +10,37 @@
   },
   "hook": {
     "segment_type": "Hook",
-    "narration": "Bacteria don’t just live alone—they talk.",
-    "estimated_seconds": 3
+    "narration": "Bacteria don’t just live—they talk.",
+    "estimated_seconds": 2
   },
   "sections": [
     {
       "segment_type": "What Is Quorum Sensing?",
-      "narration": "They use chemical signals called quorum sensing to know when they’re in a crowd. These molecules act as messages between bacteria.",
-      "estimated_seconds": 9
-    },
-    {
-      "segment_type": "How Do They Communicate?",
-      "narration": "Bacteria release these chemicals into their environment. When enough are present, it signals that the group is large and active.",
-      "estimated_seconds": 8
-    },
-    {
-      "segment_type": "What Happens Next?",
-      "narration": "They use this signal to form protective biofilms or switch from harmless to harmful states. It’s a way to work together as a team.",
+      "narration": "They use chemical signals called quorum sensing to know when they’re in a crowd. These messages help them act together as a group.",
       "estimated_seconds": 10
     },
     {
-      "segment_type": "Why Does This Matter?",
-      "narration": "This communication shapes their behavior and survival. Scientists study it to develop new ways to fight infections and improve health.",
+      "segment_type": "How Do They Send Messages?",
+      "narration": "Bacteria release molecules into their environment. Other bacteria pick up these signals and respond accordingly.",
+      "estimated_seconds": 6
+    },
+    {
+      "segment_type": "What Happens When They Communicate?",
+      "narration": "They form protective biofilms or switch from harmless to harmful states. This coordination helps them survive in tough conditions.",
+      "estimated_seconds": 8
+    },
+    {
+      "segment_type": "Why It Matters",
+      "narration": "Scientists study this communication to fight infections and develop new treatments. Understanding it changes how we see microbial life.",
       "estimated_seconds": 8
     }
   ],
   "closing": {
     "segment_type": "Closing Takeaway",
-    "narration": "Bacteria use chemical signals to talk, cooperate, and survive—key insights that drive breakthroughs in science and medicine.",
+    "narration": "Bacteria use chemical signals to work together, shaping their survival and influencing medical science in powerful ways.",
     "estimated_seconds": 7
   },
-  "full_narration": "Bacteria don’t just live alone—they talk.\n\nThey use chemical signals called quorum sensing to know when they’re in a crowd. These molecules act as messages between bacteria.\n\nBacteria release these chemicals into their environment. When enough are present, it signals that the group is large and active.\n\nThey use this signal to form protective biofilms or switch from harmless to harmful states. It’s a way to work together as a team.\n\nThis communication shapes their behavior and survival. Scientists study it to develop new ways to fight infections and improve health.\n\nBacteria use chemical signals to talk, cooperate, and survive—key insights that drive breakthroughs in science and medicine.",
-  "word_count": 110,
-  "estimated_total_seconds": 45
+  "full_narration": "Bacteria don’t just live—they talk.\n\nThey use chemical signals called quorum sensing to know when they’re in a crowd. These messages help them act together as a group.\n\nBacteria release molecules into their environment. Other bacteria pick up these signals and respond accordingly.\n\nThey form protective biofilms or switch from harmless to harmful states. This coordination helps them survive in tough conditions.\n\nScientists study this communication to fight infections and develop new treatments. Understanding it changes how we see microbial life.\n\nBacteria use chemical signals to work together, shaping their survival and influencing medical science in powerful ways.",
+  "word_count": 99,
+  "estimated_total_seconds": 41
 }
