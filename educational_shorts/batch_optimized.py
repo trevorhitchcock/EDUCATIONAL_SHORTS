@@ -1153,20 +1153,28 @@ def _run_one_topic_optimized(
 
         _print_timing_summary(timings)
 
+        final_status = (
+            "manual_review"
+            if report.requires_manual_review
+            else "completed"
+        )
+
+        final_message = (
+            "Video rendered, but publication is blocked pending manual review."
+            if report.requires_manual_review
+            else "Finished the optimized educational-short pipeline."
+        )
+
         return (
             PipelineItemResult(
                 item_number=item_number,
                 topic_index=topic_index,
                 topic_title=topic.title,
-                status="completed",
+                status=final_status,
                 final_stage=stage,
-                message=(
-                    "Finished the optimized educational-short pipeline."
-                ),
+                message=final_message,
                 fact_check_verdict=report.verdict,
-                requires_manual_review=(
-                    report.requires_manual_review
-                ),
+                requires_manual_review=report.requires_manual_review,
                 stages_completed=stages_completed,
                 paths=paths,
                 started_at_utc=started,
